@@ -1,24 +1,9 @@
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 import { Platform } from 'react-native';
 
 // Lazy resolve the directory to ensure native module is ready
 const getRootDir = () => {
-    let dir = FileSystem.documentDirectory || FileSystem.cacheDirectory;
-
-    // Check known potential locations in newer SDKs
-    if (!dir) {
-        if (FileSystem.Paths) {
-            dir = FileSystem.Paths.documentDirectory || FileSystem.Paths.cacheDirectory;
-        }
-    }
-
-    // Last ditch: check if 'Directory' object has it (based on keys log)
-    // @ts-ignore
-    if (!dir && FileSystem.Directory) {
-        console.log('FileSystem.Directory found:', JSON.stringify(FileSystem.Directory));
-        // @ts-ignore
-        dir = FileSystem.Directory.document || FileSystem.Directory.cache;
-    }
+    const dir = FileSystem.documentDirectory || FileSystem.cacheDirectory;
 
     if (!dir) {
         // Fallback for Android Expo Go specifically if everything else failed
@@ -88,8 +73,7 @@ export const downloadFile = async (url: string, filename: string): Promise<strin
     const fileUri = getLocalUri(filename);
     if (!fileUri) {
         // Only throw here if we really can't get a path
-        const pathsLog = FileSystem.Paths ? `Paths: ${JSON.stringify(FileSystem.Paths)}` : 'Paths: undefined';
-        throw new Error(`Document directory is not available. Platform: ${Platform.OS}. Debug: ${pathsLog}`);
+        throw new Error(`Document directory is not available. Platform: ${Platform.OS}.`);
     }
 
     console.log(`Attempting to download ${url} to ${fileUri}`);

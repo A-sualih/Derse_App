@@ -1,15 +1,27 @@
 {
   "expo": {
-    "name": "ሙምቲዕ ደርስ App",
-    "slug": "ሙምቲዕ ደርስ App",
+    "name": "ሙምቲዕ ደርስ በ ኡስታዝ አቡ ጁወይሪያ  App",
+    "slug": "DerseApp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "derseapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "package": "com.sualih.DerseApp",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/178aa31d-d9a1-4baf-ad07-4eaba4012ec0"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -20,7 +32,12 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.sualih.DerseApp"
+      "package": "com.sualih.DerseApp",
+      "permissions": [
+        "WAKE_LOCK",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -39,7 +56,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -48,8 +66,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "83fd8640-a0ff-4582-b750-e378ac65b086"
+        "projectId": "178aa31d-d9a1-4baf-ad07-4eaba4012ec0"
       }
-    }
+    },
+    "owner": "abumahi"
   }
 }
