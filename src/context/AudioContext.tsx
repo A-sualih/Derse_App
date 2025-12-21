@@ -9,9 +9,10 @@ interface AudioContextType {
     isPlaying: boolean;
     isLoading: boolean;
     currentUri: string | null;
+    currentTitle: string | null;
     position: number;
     duration: number;
-    playSound: (uri: string) => Promise<void>;
+    playSound: (uri: string, title?: string) => Promise<void>;
     pauseSound: (savePosition?: boolean) => Promise<void>;
     seekScroll: (value: number) => Promise<void>;
     skip: (seconds: number) => Promise<void>;
@@ -23,6 +24,7 @@ const AudioContext = createContext<AudioContextType | undefined>(undefined);
 
 export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [currentUri, setCurrentUri] = useState<string | null>(null);
+    const [currentTitle, setCurrentTitle] = useState<string | null>(null);
     const player = useAudioPlayer(currentUri);
     const status = useAudioPlayerStatus(player);
     const [isLoading, setIsLoading] = useState(false);
@@ -115,7 +117,7 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         };
     }, [isPlaying, currentUri, position]);
 
-    const playSound = async (uri: string) => {
+    const playSound = async (uri: string, title?: string) => {
         try {
             if (currentUri === uri) {
                 if (status.playing) {
@@ -128,6 +130,15 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             setIsLoading(true);
             console.log('Loading Sound from:', uri);
+
+            // Set title
+            if (title) {
+                setCurrentTitle(title);
+            } else {
+                // Try to find name in mock data
+                const foundFile = DRIVE_FILES.find(f => f.url === uri);
+                setCurrentTitle(foundFile ? foundFile.name : 'Audio');
+            }
 
             // Check for saved position
             const savedPos = await AsyncStorage.getItem(getPersistenceKey(uri));
@@ -209,7 +220,7 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     return (
         <AudioContext.Provider value={{
-            isPlaying, isLoading, currentUri, position, duration,
+            isPlaying, isLoading, currentUri, currentTitle, position, duration,
             playSound, pauseSound, seekScroll, skip, nextTrack, previousTrack
         }}>
             {children}

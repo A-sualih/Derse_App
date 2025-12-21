@@ -11,6 +11,7 @@ export const MiniPlayer: React.FC = () => {
     const {
         isPlaying,
         currentUri,
+        currentTitle,
         isLoading,
         position,
         duration,
@@ -27,10 +28,11 @@ export const MiniPlayer: React.FC = () => {
 
     if (!currentUri) return null;
 
-    // Get the proper track name from DRIVE_FILES
+    // Define audioFiles for the list modal
     const audioFiles = DRIVE_FILES.filter(file => file.type === 'audio');
-    const currentTrack = audioFiles.find(file => file.url === currentUri);
-    const trackName = currentTrack ? currentTrack.name : 'Audio';
+
+    // Use title from context, or fallback to "Audio"
+    const trackName = currentTitle || 'Audio';
 
     const handlePlayPause = () => {
         if (isPlaying) {
