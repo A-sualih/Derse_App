@@ -1,10 +1,17 @@
+import { Colors } from '@/constants/theme';
+import { FileListItem } from '@/src/components/FileListItem';
+import { DRIVE_FILES } from '@/src/constants/mockData';
+import { useTheme } from '@/src/context/ThemeContext';
+import { useAudioPlayer } from '@/src/hooks/useAudioPlayer';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { FlatList, SafeAreaView, StatusBar, StyleSheet, Text, View } from 'react-native';
-import { FileListItem } from '../../src/components/FileListItem';
-import { DRIVE_FILES } from '../../src/constants/mockData';
-import { useAudioPlayer } from '../../src/hooks/useAudioPlayer';
+import { FlatList, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function App() {
+  const { colorScheme, themePreference, setThemePreference } = useTheme();
+  const theme = Colors[colorScheme];
+
   const {
     playSound,
     pauseSound,
@@ -16,11 +23,24 @@ export default function App() {
     duration
   } = useAudioPlayer();
 
+  const toggleTheme = () => {
+    setThemePreference(colorScheme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Drive Files</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
+      <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
+      <View style={[styles.header, { backgroundColor: theme.background, borderBottomColor: colorScheme === 'dark' ? '#333' : '#e0e0e0' }]}>
+        <View style={styles.headerContent}>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>ሙምቲዕ ደርስ</Text>
+          <TouchableOpacity onPress={toggleTheme} style={styles.themeToggle}>
+            <Ionicons
+              name={colorScheme === 'dark' ? "sunny" : "moon"}
+              size={24}
+              color={theme.text}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
       <FlatList
         data={DRIVE_FILES}
@@ -50,19 +70,23 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   header: {
-    padding: 20,
-    backgroundColor: '#fff',
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    width: '100%',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+  },
+  themeToggle: {
+    padding: 8,
   },
   listContent: {
     paddingVertical: 10,

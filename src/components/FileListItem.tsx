@@ -1,9 +1,11 @@
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useFileDownloader } from '@/src/hooks/useFileDownloader';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useFileDownloader } from '../hooks/useFileDownloader';
 import { DriveFile } from '../types';
 
 interface FileListItemProps {
@@ -29,6 +31,8 @@ export const FileListItem: React.FC<FileListItemProps> = ({
     position = 0,
     duration = 0
 }) => {
+    const colorScheme = useColorScheme() ?? 'light';
+    const theme = Colors[colorScheme];
     const { downloaded, loading, download, remove, localUri } = useFileDownloader(file.name, file.url);
     const router = useRouter();
 
@@ -42,7 +46,11 @@ export const FileListItem: React.FC<FileListItemProps> = ({
             // Navigate to In-App PDF Viewer
             router.push({
                 pathname: '/pdf-viewer',
-                params: { url: localUri, name: file.name }
+                params: {
+                    url: localUri,
+                    remoteUrl: file.url,
+                    name: file.name
+                }
             });
         }
     };
@@ -68,7 +76,7 @@ export const FileListItem: React.FC<FileListItemProps> = ({
         if (loading) {
             return (
                 <View style={styles.actionContainer}>
-                    <ActivityIndicator size="small" color="#007AFF" />
+                    <ActivityIndicator size="small" color={theme.tint} />
                 </View>
             );
         }
@@ -76,7 +84,7 @@ export const FileListItem: React.FC<FileListItemProps> = ({
         if (!downloaded) {
             return (
                 <TouchableOpacity onPress={download} style={styles.downloadButton}>
-                    <Ionicons name="cloud-download-outline" size={24} color="#007AFF" />
+                    <Ionicons name="cloud-download-outline" size={24} color={theme.tint} />
                 </TouchableOpacity>
             );
         }
@@ -87,18 +95,18 @@ export const FileListItem: React.FC<FileListItemProps> = ({
                 {file.type === 'audio' ? (
                     <TouchableOpacity onPress={handleAudioPress} style={styles.actionButton}>
                         {isAudioLoading && isCurrent ? (
-                            <ActivityIndicator size="small" color="#007AFF" />
+                            <ActivityIndicator size="small" color={theme.tint} />
                         ) : (
                             <Ionicons
                                 name={isCurrent && isPlaying ? "pause-circle" : "play-circle"}
                                 size={40}
-                                color="#007AFF"
+                                color={theme.tint}
                             />
                         )}
                     </TouchableOpacity>
                 ) : (
                     <TouchableOpacity onPress={handleOpenPdf} style={styles.actionButton}>
-                        <Ionicons name="document-text-outline" size={32} color="#007AFF" />
+                        <Ionicons name="document-text-outline" size={32} color={theme.tint} />
                     </TouchableOpacity>
                 )}
 
@@ -110,18 +118,18 @@ export const FileListItem: React.FC<FileListItemProps> = ({
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.background, borderBottomColor: colorScheme === 'dark' ? '#333' : '#f0f0f0' }]}>
             <View style={styles.mainRow}>
                 <View style={styles.info}>
                     <Ionicons
                         name={file.type === 'audio' ? 'musical-note' : 'document'}
                         size={24}
-                        color="#333"
+                        color={theme.icon}
                         style={styles.icon}
                     />
                     <View style={{ flex: 1 }}>
-                        <Text style={styles.name} numberOfLines={1}>{file.name}</Text>
-                        <Text style={styles.status}>
+                        <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>{file.name}</Text>
+                        <Text style={[styles.status, { color: theme.icon + '80' }]}>
                             {downloaded ? 'Downloaded' : 'Not downloaded'}
                         </Text>
                     </View>
