@@ -1,6 +1,6 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -27,8 +27,7 @@ const NativePdf: React.FC<NativePdfProps> = ({ url, remoteUrl, targetPage = 1, z
             }
 
             try {
-                // For Android, we still need base64 for PDF.js local access in many cases,
-                // but we do it without blocking the initial WebView render if possible.
+                // For Android, base64 is often required to bypass security restrictions on file:/// inside a string-based WebView.
                 const content = await FileSystem.readAsStringAsync(url, {
                     encoding: FileSystem.EncodingType.Base64
                 });
@@ -42,19 +41,6 @@ const NativePdf: React.FC<NativePdfProps> = ({ url, remoteUrl, targetPage = 1, z
         loadPdf();
     }, [url]);
 
-    if (Platform.OS === 'ios') {
-        return (
-            <View style={styles.container}>
-                <WebView
-                    source={{ uri: url }}
-                    style={styles.webview}
-                    scalesPageToFit={true}
-                // iOS supports page navigation via JavaScript if needed, 
-                // but for "immediate" loading, native is best.
-                />
-            </View>
-        );
-    }
 
     const htmlContent = `
         <!DOCTYPE html>
@@ -72,9 +58,10 @@ const NativePdf: React.FC<NativePdfProps> = ({ url, remoteUrl, targetPage = 1, z
             </style>
         </head>
         <body>
-            <div id="loading">Initial loading...</div>
+            <div id="loading" style="display: none;">Initial loading...</div>
             <div id="viewer"></div>
             <script>
+                const initialUrl = "${url}";
                 const targetPage = ${targetPage};
                 const zoomLevel = ${zoom};
                 const isDark = ${colorScheme === 'dark'};
@@ -96,10 +83,9 @@ const NativePdf: React.FC<NativePdfProps> = ({ url, remoteUrl, targetPage = 1, z
                             : pdfjsLib.getDocument(url);
                         
                         pdfDoc = await loadingTask.promise;
-                        document.getElementById('loading').style.display = 'none';
                         await setupViewer();
                     } catch (e) {
-                        document.getElementById('loading').innerText = 'Error: ' + e.message;
+                        console.error('PDF.js loading error:', e);
                     }
                 }
 
@@ -188,11 +174,8 @@ const NativePdf: React.FC<NativePdfProps> = ({ url, remoteUrl, targetPage = 1, z
                     }
                 }
 
-                // Try direct URL if possible (with flags enabled on WebView)
-                const initialUrl = "${url}";
-                if (initialUrl.startsWith('http') || initialUrl.startsWith('file:///')) {
-                    startRendering(null, initialUrl);
-                }
+                // For Android: Wait for base64 injection from React Native
+                // The base64 data will be injected via the useEffect below
             </script>
         </body>
         </html>
@@ -208,10 +191,25 @@ const NativePdf: React.FC<NativePdfProps> = ({ url, remoteUrl, targetPage = 1, z
     };
 
     useEffect(() => {
-        if (base64 && !isReading && webViewRef.current) {
-            webViewRef.current.injectJavaScript(`if(typeof startRendering !== "undefined") startRendering("${base64}", "");`);
+        if (base64 && !isReading && webViewRef.current && Platform.OS !== 'ios') {
+            // Small delay to ensure WebView is ready
+            setTimeout(() => {
+                webViewRef.current?.injectJavaScript(`if(typeof startRendering !== "undefined") startRendering("${base64}", "");`);
+            }, 100);
         }
     }, [base64, isReading]);
+
+    if (Platform.OS === 'ios') {
+        return (
+            <View style={styles.container}>
+                <WebView
+                    source={{ uri: url }}
+                    style={styles.webview}
+                    scalesPageToFit={true}
+                />
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -226,12 +224,7 @@ const NativePdf: React.FC<NativePdfProps> = ({ url, remoteUrl, targetPage = 1, z
                 allowUniversalAccessFromFileURLs={true}
                 javaScriptEnabled={true}
                 domStorageEnabled={true}
-                startInLoadingState={true}
-                renderLoading={() => (
-                    <View style={[StyleSheet.absoluteFill, styles.center, { backgroundColor: colorScheme === 'dark' ? '#151718' : '#525659' }]}>
-                        <ActivityIndicator size="large" color="#007AFF" />
-                    </View>
-                )}
+                startInLoadingState={false}
             />
         </View>
     );

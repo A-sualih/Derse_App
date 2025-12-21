@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ሙምቲዕ ደርስ በ ኡስታዝ አቡ ጁወይሪያ  App",
+    "name": "ሙምቲዕ ደርስ በ ኡስታዝ አቡ ጁወይሪያ  ",
     "slug": "DerseApp",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -57,7 +57,17 @@
           }
         }
       ],
-      "expo-audio"
+      [
+        "expo-audio",
+        {
+          "android": {
+            "enableBackgroundAudio": true
+          },
+          "ios": {
+            "enableBackgroundAudio": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,7 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Audio, AVPlaybackStatus } from 'expo-av';
-import React, { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { Audio as ExpoAV } from 'expo-av';
+import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Platform } from 'react-native';
+import { DRIVE_FILES } from '../constants/mockData';
 
 interface AudioContextType {
     isPlaying: boolean;
@@ -13,48 +15,92 @@ interface AudioContextType {
     pauseSound: (savePosition?: boolean) => Promise<void>;
     seekScroll: (value: number) => Promise<void>;
     skip: (seconds: number) => Promise<void>;
+    nextTrack: () => void;
+    previousTrack: () => void;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
 
 export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [sound, setSound] = useState<Audio.Sound>();
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
     const [currentUri, setCurrentUri] = useState<string | null>(null);
-    const [position, setPosition] = useState(0);
-    const [duration, setDuration] = useState(0);
+    const player = useAudioPlayer(currentUri);
+    const status = useAudioPlayerStatus(player);
+    const [isLoading, setIsLoading] = useState(false);
     const positionSaveInterval = useRef<any>(null);
+    const pendingSeekPosition = useRef<number | null>(null);
+    const shouldAutoPlay = useRef(false);
 
-    const getPersistenceKey = (uri: string) => `audio_pos_${encodeURIComponent(uri)}`;
+    // Sync status back to our context-friendly state
+    const isPlaying = status.playing;
+    const position = status.currentTime * 1000; // status is in seconds, we use ms for compatibility
+    const duration = status.duration * 1000;
 
-    const onPlaybackStatusUpdate = useCallback((status: AVPlaybackStatus) => {
-        if (status.isLoaded) {
-            setPosition(status.positionMillis);
-            setDuration(status.durationMillis || 0);
-
-            if (status.didJustFinish) {
-                setIsPlaying(false);
-                setPosition(0);
-                if (sound) {
-                    sound.setPositionAsync(0);
-                }
-                // Clear persistence on finish
-                if (currentUri) {
-                    AsyncStorage.removeItem(getPersistenceKey(currentUri));
-                }
+    useEffect(() => {
+        // Configure audio mode for background playback
+        const setupAudio = async () => {
+            try {
+                await setAudioModeAsync({
+                    playsInSilentMode: true,
+                    shouldPlayInBackground: true,
+                    // casting to any because expo-audio types expect a string union, but native expects an Enum value
+                    interruptionMode: ExpoAV.INTERRUPTION_MODE_ANDROID_DUCK_OTHERS as any,
+                });
+                console.log('Audio mode configured for background playback');
+            } catch (error) {
+                console.error('Error setting audio mode:', error);
             }
-        } else if (status.error) {
-            console.error('Playback object error:', status.error);
+        };
+        setupAudio();
+    }, []);
+
+    // Auto-play and restore position when a new track is loaded
+    useEffect(() => {
+        if (!currentUri || !shouldAutoPlay.current) return;
+
+        // Check if we have a pending position to restore
+        if (pendingSeekPosition.current !== null && status.duration > 0) {
+            const posToRestore = pendingSeekPosition.current;
+            pendingSeekPosition.current = null;
+
+            console.log('Restoring position:', posToRestore / 1000, 'seconds');
+            player.seekTo(posToRestore / 1000)
+                .then(() => {
+                    player.play();
+                    shouldAutoPlay.current = false;
+                    setIsLoading(false);
+                })
+                .catch((error) => {
+                    console.error('Error restoring position:', error);
+                    player.play();
+                    shouldAutoPlay.current = false;
+                    setIsLoading(false);
+                });
+        } else if (status.duration > 0) {
+            // No saved position, just play
+            player.play();
+            shouldAutoPlay.current = false;
+            setIsLoading(false);
         }
-    }, [sound, currentUri]);
+    }, [currentUri, status.duration, player]);
+
+    const getPersistenceKey = (uri: string) => `audio_pos_${encodeURIComponent(uri)} `;
+
+    // Handle completion
+    useEffect(() => {
+        if (status.didJustFinish) {
+            player.seekTo(0).catch(err => console.error('Seek to start error:', err));
+            if (currentUri) {
+                AsyncStorage.removeItem(getPersistenceKey(currentUri));
+            }
+        }
+    }, [status.didJustFinish, currentUri, player]);
 
     // Save position periodically when playing
     useEffect(() => {
         if (isPlaying && currentUri) {
             positionSaveInterval.current = setInterval(() => {
                 AsyncStorage.setItem(getPersistenceKey(currentUri), position.toString());
-            }, 5000); // Save every 5 seconds
+            }, 1000); // Save every 1 second for more precision
         } else {
             if (positionSaveInterval.current) {
                 clearInterval(positionSaveInterval.current);
@@ -70,74 +116,50 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }, [isPlaying, currentUri, position]);
 
     const playSound = async (uri: string) => {
-        setIsLoading(true);
         try {
-            if (sound) {
-                if (currentUri === uri) {
-                    if (isPlaying) {
-                        await sound.pauseAsync();
-                        setIsPlaying(false);
-                    } else {
-                        await sound.playAsync();
-                        setIsPlaying(true);
-                    }
-                    setIsLoading(false);
-                    return;
+            if (currentUri === uri) {
+                if (status.playing) {
+                    player.pause();
                 } else {
-                    await sound.unloadAsync();
-                    setPosition(0);
-                    setDuration(0);
+                    player.play();
                 }
+                return;
             }
 
+            setIsLoading(true);
             console.log('Loading Sound from:', uri);
-            const { sound: newSound, status } = await Audio.Sound.createAsync(
-                { uri },
-                { shouldPlay: false },
-                onPlaybackStatusUpdate
-            );
-
-            if (!status.isLoaded) {
-                throw new Error(`Sound failed to load. Status: ${JSON.stringify(status)}`);
-            }
 
             // Check for saved position
             const savedPos = await AsyncStorage.getItem(getPersistenceKey(uri));
             if (savedPos) {
                 const pos = parseInt(savedPos, 10);
-                if (pos < (status.durationMillis || 0)) {
-                    await newSound.setPositionAsync(pos);
-                    setPosition(pos);
-                }
+                pendingSeekPosition.current = pos;
+            } else {
+                pendingSeekPosition.current = null;
             }
 
-            setSound(newSound);
-            setCurrentUri(uri);
-            setDuration(status.durationMillis || 0);
+            shouldAutoPlay.current = true;
 
-            console.log('Playing Sound (Resumed if available)');
-            await newSound.playAsync();
-            setIsPlaying(true);
+            // Change the current URI (this will trigger player reload and the useEffect above)
+            setCurrentUri(uri);
 
         } catch (error: any) {
             console.error('Error playing sound', error);
+            setIsLoading(false);
             if (Platform.OS === 'web' && uri.includes('drive.google.com')) {
                 const message = 'Google Drive audio links cannot stream directly in the browser. Open in new tab?';
                 if (window.confirm(message)) {
                     Linking.openURL(uri);
                 }
             } else {
-                Alert.alert('Playback Error', `Error playing audio: ${error.message || error}`);
+                Alert.alert('Playback Error', `Error playing audio: ${error.message || error} `);
             }
-        } finally {
-            setIsLoading(false);
         }
     };
 
     const pauseSound = async () => {
-        if (sound && isPlaying) {
-            await sound.pauseAsync();
-            setIsPlaying(false);
+        if (player.playing) {
+            player.pause();
             if (currentUri) {
                 AsyncStorage.setItem(getPersistenceKey(currentUri), position.toString());
             }
@@ -145,35 +167,50 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     const seekScroll = async (value: number) => {
-        if (sound) {
-            await sound.setPositionAsync(value);
-            setPosition(value);
+        try {
+            await player.seekTo(value / 1000);
             if (currentUri) {
                 AsyncStorage.setItem(getPersistenceKey(currentUri), value.toString());
             }
+        } catch (error) {
+            console.error('Seek error:', error);
         }
     };
 
     const skip = async (seconds: number) => {
-        if (sound) {
+        try {
             const newPosition = position + seconds * 1000;
             const clampedPosition = Math.max(0, Math.min(newPosition, duration));
-            await sound.setPositionAsync(clampedPosition);
-            setPosition(clampedPosition);
+            await player.seekTo(clampedPosition / 1000);
             if (currentUri) {
                 AsyncStorage.setItem(getPersistenceKey(currentUri), clampedPosition.toString());
             }
+        } catch (error) {
+            console.error('Skip error:', error);
         }
     };
 
-    useEffect(() => {
-        return sound ? () => { sound.unloadAsync(); } : undefined;
-    }, [sound]);
+    const nextTrack = () => {
+        const audioFiles = DRIVE_FILES.filter(file => file.type === 'audio');
+        const currentIndex = audioFiles.findIndex(file => file.url === currentUri);
+        if (currentIndex !== -1 && currentIndex < audioFiles.length - 1) {
+            playSound(audioFiles[currentIndex + 1].url);
+        }
+    };
+
+    const previousTrack = () => {
+        const audioFiles = DRIVE_FILES.filter(file => file.type === 'audio');
+        const currentIndex = audioFiles.findIndex(file => file.url === currentUri);
+        if (currentIndex > 0) {
+            playSound(audioFiles[currentIndex - 1].url);
+        }
+    };
+
 
     return (
         <AudioContext.Provider value={{
             isPlaying, isLoading, currentUri, position, duration,
-            playSound, pauseSound, seekScroll, skip
+            playSound, pauseSound, seekScroll, skip, nextTrack, previousTrack
         }}>
             {children}
         </AudioContext.Provider>

@@ -9,7 +9,7 @@ import { FlatList, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function App() {
-  const { colorScheme, themePreference, setThemePreference } = useTheme();
+  const { colorScheme, setThemePreference } = useTheme();
   const theme = Colors[colorScheme];
 
   const {
@@ -32,7 +32,7 @@ export default function App() {
       <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
       <View style={[styles.header, { backgroundColor: theme.background, borderBottomColor: colorScheme === 'dark' ? '#333' : '#e0e0e0' }]}>
         <View style={styles.headerContent}>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>ሙምቲዕ ደርስ</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>ሙምቲዕ ደርስ በ ኡስታዝ አቡ ጁወይሪያ</Text>
           <TouchableOpacity onPress={toggleTheme} style={styles.themeToggle}>
             <Ionicons
               name={colorScheme === 'dark' ? "sunny" : "moon"}

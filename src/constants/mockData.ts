@@ -93,6 +93,96 @@ export const DRIVE_FILES: DriveFile[] = [
         name: 'ሙምቲዕ ደርስ 150.mp3',
         type: 'audio',
         url: getDirectLink('1I-LFIGx1TnWGwvkj-eKe6soAfIrb76KN'),
+    },
+    {
+        id: '151',
+        name: 'ሙምቲዕ ደርስ 151.mp3',
+        type: 'audio',
+        url: getDirectLink('1Xf-MvSmekWIa-nqzGAvc-K_QcyNhm5-3'),
+    },
+    {
+        id: '152',
+        name: 'ሙምቲዕ ደርስ 152.mp3',
+        type: 'audio',
+        url: getDirectLink('1F_Sgs8ciCTAjCIw-ktvTliZs0zrnh_v7'),
+    },
+    {
+        id: '153',
+        name: 'ሙምቲዕ ደርስ 153.mp3',
+        type: 'audio',
+        url: getDirectLink('11oRBOPLhEYOAv-RJJUrvAXLrn4hX3bPR'),
+    },
+    {
+        id: '154',
+        name: 'ሙምቲዕ ደርስ 154.mp3',
+        type: 'audio',
+        url: getDirectLink('1NnLDAw5U4fVk86I-Bv02WAlV0nDvM-UC'),
+    },
+    {
+        id: '155',
+        name: 'ሙምቲዕ ደርስ 155.mp3',
+        type: 'audio',
+        url: getDirectLink('1Qr9Vzy230yeq4NguTMoy0k3CJ76BFwPh'),
+    },
+    {
+        id: '156',
+        name: 'ሙምቲዕ ደርስ 156.mp3',
+        type: 'audio',
+        url: getDirectLink('1xkDRQoLWUMdMauk2rOkSAAR87BhVZxOO'),
+    },
+    {
+        id: '157',
+        name: 'ሙምቲዕ ደርስ 157.mp3',
+        type: 'audio',
+        url: getDirectLink('1o3s5FmJP2Vgcvvm7InAYFZ8EYCKjPJ8D'),
+    },
+    {
+        id: '158',
+        name: 'ሙምቲዕ ደርስ 158.mp3',
+        type: 'audio',
+        url: getDirectLink('1dss57EIHaec9rm3GfwpwOnwuEV5JVucz'),
+    },
+    {
+        id: '159',
+        name: 'ሙምቲዕ ደርስ 159.mp3',
+        type: 'audio',
+        url: getDirectLink('1MRa59EsB3gaoks-JSTF6SAEs5KlznsKh'),
+    },
+    {
+        id: '160',
+        name: 'ሙምቲዕ ደርስ 160.mp3',
+        type: 'audio',
+        url: getDirectLink('1Y1XLGKyfGX21hGnBzCuCU2aGDCJwPeiD'),
+    },
+    {
+        id: '161',
+        name: 'ሙምቲዕ ደርስ 161.mp3',
+        type: 'audio',
+        url: getDirectLink('11kCob5cMfDjaRsLXjlSbwFaGdmN-MsZ_'),
+    },
+    {
+        id: '162',
+        name: 'ሙምቲዕ ደርስ 162.mp3',
+        type: 'audio',
+        url: getDirectLink('1c7we8LMm5DkjJGvzrAZNWI2KJkOYPcf-'),
+    },
+    {
+        id: '163',
+        name: 'ሙምቲዕ ደርስ 163.mp3',
+        type: 'audio',
+        url: getDirectLink('1MkWhbBUb6KDHBMRwj6Q0uqNdZuiGcs9Y'),
+    },
+    {
+        id: '164',
+        name: 'ሙምቲዕ ደርስ 164.mp3',
+        type: 'audio',
+        url: getDirectLink('1se1xTBrJyMst1hgCndsMOo7m9wQBoWju'),
+    },
+    {
+        id: '165',
+        name: 'ሙምቲዕ ደርስ 165.mp3',
+        type: 'audio',
+        url: getDirectLink('17iBt8DebZWNQA4ntvF5tB1y0ixORGHfU'),
     }
 ];
 
