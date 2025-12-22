@@ -10,7 +10,7 @@ import { DriveFile } from '../types';
 
 interface FileListItemProps {
     file: DriveFile;
-    onPlay?: (uri: string, title?: string) => void;
+    onPlay?: (uri: string, title?: string, queue?: any[], fileId?: string) => void;
     onPause?: () => void;
     onSeek?: (value: number) => void;
     isPlaying?: boolean;
@@ -61,8 +61,8 @@ export const FileListItem: React.FC<FileListItemProps> = ({
         if (isCurrent && isPlaying && onPause) {
             onPause();
         } else if (onPlay) {
-            // Pass the title manually using file.name
-            onPlay(localUri, file.name);
+            // Pass the title manually using file.name and id
+            onPlay(localUri, file.name, undefined, file.id);
         }
     };
 

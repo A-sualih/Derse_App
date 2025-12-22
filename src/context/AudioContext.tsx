@@ -11,9 +11,10 @@ interface AudioContextType {
     isLoading: boolean;
     currentUri: string | null;
     currentTitle: string | null;
+    currentFileId: string | null;
     position: number;
     duration: number;
-    playSound: (uri: string, title?: string, queue?: DriveFile[]) => Promise<void>;
+    playSound: (uri: string, title?: string, queue?: DriveFile[], fileId?: string) => Promise<void>;
     pauseSound: (savePosition?: boolean) => Promise<void>;
     seekScroll: (value: number) => Promise<void>;
     skip: (seconds: number) => Promise<void>;
@@ -26,6 +27,8 @@ const AudioContext = createContext<AudioContextType | undefined>(undefined);
 export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [currentUri, setCurrentUri] = useState<string | null>(null);
     const [currentTitle, setCurrentTitle] = useState<string | null>(null);
+    const [currentFileId, setCurrentFileId] = useState<string | null>(null);
+    const [localIsPlaying, setLocalIsPlaying] = useState(false);
     const player = useAudioPlayer(currentUri);
     const status = useAudioPlayerStatus(player);
     const [isLoading, setIsLoading] = useState(false);
@@ -34,9 +37,16 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const shouldAutoPlay = useRef(false);
 
     // Sync status back to our context-friendly state
-    const isPlaying = status.playing;
+    const isPlaying = localIsPlaying;
     const position = status.currentTime * 1000; // status is in seconds, we use ms for compatibility
     const duration = status.duration * 1000;
+
+    // Sync localIsPlaying with native status, but skip while loading or during transitions
+    useEffect(() => {
+        if (!isLoading) {
+            setLocalIsPlaying(status.playing);
+        }
+    }, [status.playing, isLoading]);
 
     useEffect(() => {
         // Configure audio mode for background playback
@@ -123,45 +133,58 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     // ... (rest of the effects)
 
-    const playSound = async (uri: string, title?: string, queue?: DriveFile[]) => {
+    const playSound = async (uri: string, title?: string, queue?: DriveFile[], fileId?: string) => {
         try {
-            if (queue) {
-                setCurrentQueue(queue);
-            }
-
             if (currentUri === uri) {
                 if (status.playing) {
+                    setLocalIsPlaying(false);
                     player.pause();
                 } else {
+                    setLocalIsPlaying(true);
                     player.play();
                 }
                 return;
             }
 
+            // INSTANT STATE UPDATES
+            setLocalIsPlaying(true);
             setIsLoading(true);
-            console.log('Loading Sound from:', uri);
 
-            // Set title
-            if (title) {
-                setCurrentTitle(title);
-            } else {
-                // Try to find name in queue or fallback to all files
-                const searchList = queue || currentQueue || DRIVE_FILES;
-                const foundFile = searchList.find(f => f.url === uri);
-                setCurrentTitle(foundFile ? foundFile.name : 'Audio');
+            // Determine Title and ID INSTANTLY
+            let foundTitle = title;
+            let foundId = fileId;
+            const searchList = queue || currentQueue || DRIVE_FILES;
+
+            if (!foundTitle || !foundId) {
+                const foundFile = searchList.find(f => f.url === uri || (fileId && f.id === fileId));
+                if (foundFile) {
+                    if (!foundTitle) foundTitle = foundFile.name;
+                    if (!foundId) foundId = foundFile.id;
+                }
             }
 
-            // ... (persistence logic)
-            const savedPos = await AsyncStorage.getItem(getPersistenceKey(uri));
-            if (savedPos) {
-                const pos = parseInt(savedPos, 10);
-                pendingSeekPosition.current = pos;
-            } else {
-                pendingSeekPosition.current = null;
+            setCurrentTitle(foundTitle || 'Audio');
+            setCurrentFileId(foundId || null);
+
+            if (queue) {
+                setCurrentQueue(queue);
             }
 
-            shouldAutoPlay.current = true;
-            setCurrentUri(uri);
+            // FIRE AND FORGET PERSISTENCE CHECK (don't await)
+            AsyncStorage.getItem(getPersistenceKey(uri))
+                .then(savedPos => {
+                    if (savedPos) {
+                        pendingSeekPosition.current = parseInt(savedPos, 10);
+                    } else {
+                        pendingSeekPosition.current = null;
+                    }
+                })
+                .catch(e => console.error("Position restore error", e))
+                .finally(() => {
+                    // Finally set the URI to trigger loading
+                    shouldAutoPlay.current = true;
+                    setCurrentUri(uri);
+                });
 
         } catch (error: any) {
             // ... (error handling)
@@ -179,6 +202,7 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     const pauseSound = async () => {
+        setLocalIsPlaying(false);
         if (player.playing) {
             player.pause();
             if (currentUri) {
@@ -197,7 +221,6 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             console.error('Seek error:', error);
         }
     };
-
     const skip = async (seconds: number) => {
         try {
             const newPosition = position + seconds * 1000;
@@ -213,24 +236,44 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const nextTrack = () => {
         const audioFiles = currentQueue.filter(file => file.type === 'audio');
-        const currentIndex = audioFiles.findIndex(file => file.url === currentUri);
+        let currentIndex = -1;
+
+        if (currentFileId) {
+            currentIndex = audioFiles.findIndex(file => file.id === currentFileId);
+        }
+
+        if (currentIndex === -1) {
+            currentIndex = audioFiles.findIndex(file => file.url === currentUri);
+        }
+
         if (currentIndex !== -1 && currentIndex < audioFiles.length - 1) {
-            playSound(audioFiles[currentIndex + 1].url, undefined, currentQueue);
+            const nextFile = audioFiles[currentIndex + 1];
+            playSound(nextFile.url, nextFile.name, currentQueue, nextFile.id);
         }
     };
 
     const previousTrack = () => {
         const audioFiles = currentQueue.filter(file => file.type === 'audio');
-        const currentIndex = audioFiles.findIndex(file => file.url === currentUri);
+        let currentIndex = -1;
+
+        if (currentFileId) {
+            currentIndex = audioFiles.findIndex(file => file.id === currentFileId);
+        }
+
+        if (currentIndex === -1) {
+            currentIndex = audioFiles.findIndex(file => file.url === currentUri);
+        }
+
         if (currentIndex > 0) {
-            playSound(audioFiles[currentIndex - 1].url, undefined, currentQueue);
+            const prevFile = audioFiles[currentIndex - 1];
+            playSound(prevFile.url, prevFile.name, currentQueue, prevFile.id);
         }
     };
 
 
     return (
         <AudioContext.Provider value={{
-            isPlaying, isLoading, currentUri, currentTitle, position, duration,
+            isPlaying, isLoading, currentUri, currentTitle, currentFileId, position, duration,
             playSound, pauseSound, seekScroll, skip, nextTrack, previousTrack
         }}>
             {children}

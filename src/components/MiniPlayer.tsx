@@ -119,7 +119,7 @@ export const MiniPlayer: React.FC = () => {
                                         { backgroundColor: item.url === currentUri ? theme.tint : 'transparent' }
                                     ]}
                                     onPress={() => {
-                                        playSound(item.url);
+                                        playSound(item.url, item.name, undefined, item.id);
                                         setShowTrackList(false);
                                     }}
                                 >
