@@ -4,6 +4,7 @@ import { Audio as ExpoAV } from 'expo-av';
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Platform } from 'react-native';
 import { DRIVE_FILES } from '../constants/mockData';
+import { DriveFile } from '../types';
 
 interface AudioContextType {
     isPlaying: boolean;
@@ -12,7 +13,7 @@ interface AudioContextType {
     currentTitle: string | null;
     position: number;
     duration: number;
-    playSound: (uri: string, title?: string) => Promise<void>;
+    playSound: (uri: string, title?: string, queue?: DriveFile[]) => Promise<void>;
     pauseSound: (savePosition?: boolean) => Promise<void>;
     seekScroll: (value: number) => Promise<void>;
     skip: (seconds: number) => Promise<void>;
@@ -45,7 +46,8 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     playsInSilentMode: true,
                     shouldPlayInBackground: true,
                     // casting to any because expo-audio types expect a string union, but native expects an Enum value
-                    interruptionMode: ExpoAV.INTERRUPTION_MODE_ANDROID_DUCK_OTHERS as any,
+                    // @ts-ignore - Enum might be defined differently in this version of expo-av
+                    interruptionMode: (ExpoAV as any).INTERRUPTION_MODE_ANDROID_DUCK_OTHERS,
                 });
                 console.log('Audio mode configured for background playback');
             } catch (error) {
@@ -117,8 +119,16 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         };
     }, [isPlaying, currentUri, position]);
 
-    const playSound = async (uri: string, title?: string) => {
+    const [currentQueue, setCurrentQueue] = useState<DriveFile[]>(DRIVE_FILES);
+
+    // ... (rest of the effects)
+
+    const playSound = async (uri: string, title?: string, queue?: DriveFile[]) => {
         try {
+            if (queue) {
+                setCurrentQueue(queue);
+            }
+
             if (currentUri === uri) {
                 if (status.playing) {
                     player.pause();
@@ -135,12 +145,13 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             if (title) {
                 setCurrentTitle(title);
             } else {
-                // Try to find name in mock data
-                const foundFile = DRIVE_FILES.find(f => f.url === uri);
+                // Try to find name in queue or fallback to all files
+                const searchList = queue || currentQueue || DRIVE_FILES;
+                const foundFile = searchList.find(f => f.url === uri);
                 setCurrentTitle(foundFile ? foundFile.name : 'Audio');
             }
 
-            // Check for saved position
+            // ... (persistence logic)
             const savedPos = await AsyncStorage.getItem(getPersistenceKey(uri));
             if (savedPos) {
                 const pos = parseInt(savedPos, 10);
@@ -150,11 +161,10 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             }
 
             shouldAutoPlay.current = true;
-
-            // Change the current URI (this will trigger player reload and the useEffect above)
             setCurrentUri(uri);
 
         } catch (error: any) {
+            // ... (error handling)
             console.error('Error playing sound', error);
             setIsLoading(false);
             if (Platform.OS === 'web' && uri.includes('drive.google.com')) {
@@ -202,18 +212,18 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     const nextTrack = () => {
-        const audioFiles = DRIVE_FILES.filter(file => file.type === 'audio');
+        const audioFiles = currentQueue.filter(file => file.type === 'audio');
         const currentIndex = audioFiles.findIndex(file => file.url === currentUri);
         if (currentIndex !== -1 && currentIndex < audioFiles.length - 1) {
-            playSound(audioFiles[currentIndex + 1].url);
+            playSound(audioFiles[currentIndex + 1].url, undefined, currentQueue);
         }
     };
 
     const previousTrack = () => {
-        const audioFiles = DRIVE_FILES.filter(file => file.type === 'audio');
+        const audioFiles = currentQueue.filter(file => file.type === 'audio');
         const currentIndex = audioFiles.findIndex(file => file.url === currentUri);
         if (currentIndex > 0) {
-            playSound(audioFiles[currentIndex - 1].url);
+            playSound(audioFiles[currentIndex - 1].url, undefined, currentQueue);
         }
     };
 

@@ -9,3 +9,10 @@ export interface FileStatus {
     downloaded: boolean;
     localUri: string | null;
 }
+
+export interface Category {
+    id: string;
+    title: string;
+    description?: string;
+    files: DriveFile[];
+}

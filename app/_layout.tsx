@@ -33,6 +33,7 @@ function LayoutContent() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="pdf-viewer" options={{ title: 'PDF Viewer' }} />
         <Stack.Screen name="about" options={{ headerShown: false }} />
+        <Stack.Screen name="derse-detail" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

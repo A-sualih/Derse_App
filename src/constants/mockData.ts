@@ -1,9 +1,9 @@
-import { DriveFile } from '../types';
+import { Category, DriveFile } from '../types';
 
 // Helper to convert Google Drive view links to direct download links
 const getDirectLink = (id: string) => `https://drive.google.com/uc?export=download&id=${id}`;
 
-export const DRIVE_FILES: DriveFile[] = [
+const MUMTIC_FILES: DriveFile[] = [
     {
         id: '1',
         name: 'ሙምቲዕ.pdf',
@@ -413,4 +413,23 @@ export const DRIVE_FILES: DriveFile[] = [
         url: getDirectLink('1xN4-a83isTRRbJorm1iml6qGQhlU3vuC'),
     }
 ];
+
+export const CATEGORIES: Category[] = [
+    {
+        id: 'mumtic',
+        title: 'ሙምቲዕ ደርስ',
+        description: 'በ ኡስታዝ አቡ ጁወይሪያ የቀረበ',
+        files: MUMTIC_FILES,
+    },
+    {
+        id: 'future',
+        title: 'ሌላ ደርስ (ምሳሌ)',
+        description: 'ተጨማሪ ትምህርቶች እዚህ ይጨመራሉ',
+        files: [],
+    }
+];
+
+// For backward compatibility while refactoring other components
+export const DRIVE_FILES = MUMTIC_FILES;
+export const ALL_FILES = MUMTIC_FILES;
 

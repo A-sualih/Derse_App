@@ -1,8 +1,7 @@
 import { Colors } from '@/constants/theme';
-import { FileListItem } from '@/src/components/FileListItem';
-import { DRIVE_FILES } from '@/src/constants/mockData';
+import { CategoryCard } from '@/src/components/CategoryCard';
+import { CATEGORIES } from '@/src/constants/mockData';
 import { useTheme } from '@/src/context/ThemeContext';
-import { useAudioPlayer } from '@/src/hooks/useAudioPlayer';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -14,17 +13,6 @@ export default function App() {
   const { colorScheme, setThemePreference } = useTheme();
   const theme = Colors[colorScheme];
 
-  const {
-    playSound,
-    pauseSound,
-    seekScroll,
-    isPlaying,
-    currentUri,
-    isLoading,
-    position,
-    duration
-  } = useAudioPlayer();
-
   const toggleTheme = () => {
     setThemePreference(colorScheme === 'dark' ? 'light' : 'dark');
   };
@@ -34,7 +22,7 @@ export default function App() {
       <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
       <View style={[styles.header, { backgroundColor: theme.background, borderBottomColor: colorScheme === 'dark' ? '#333' : '#e0e0e0' }]}>
         <View style={styles.headerContent}>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>ሙምቲዕ ደርስ በ ኡስታዝ አቡ ጁወይሪያ</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>ደርሶች</Text>
           <View style={styles.headerActions}>
             <TouchableOpacity onPress={() => router.push('/about')} style={styles.iconButton}>
               <Ionicons
@@ -54,24 +42,17 @@ export default function App() {
         </View>
       </View>
       <FlatList
-        data={DRIVE_FILES}
+        data={CATEGORIES}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => {
-          const isItemCurrent = currentUri?.endsWith(encodeURIComponent(item.name));
-          return (
-            <FileListItem
-              file={item}
-              onPlay={playSound}
-              onPause={pauseSound}
-              onSeek={seekScroll}
-              isPlaying={isPlaying}
-              isCurrent={isItemCurrent}
-              isAudioLoading={isLoading}
-              position={isItemCurrent ? position : 0}
-              duration={isItemCurrent ? duration : 0}
-            />
-          );
-        }}
+        renderItem={({ item }) => (
+          <CategoryCard
+            category={item}
+            onPress={() => router.push({
+              pathname: '/derse-detail',
+              params: { categoryId: item.id }
+            })}
+          />
+        )}
         contentContainerStyle={styles.listContent}
       />
     </SafeAreaView>
