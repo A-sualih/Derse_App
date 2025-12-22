@@ -4,7 +4,7 @@ import { useUser } from '@/src/context/UserContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AboutScreen() {
@@ -28,6 +28,16 @@ export default function AboutScreen() {
     const handleSave = async () => {
         await saveProfile({ name, phoneNumber, username });
         Alert.alert('Success', 'Profile updated successfully!');
+    };
+
+    const handleShare = async () => {
+        try {
+            await Share.share({
+                message: 'Check out Derse App! Download it now: https://expo.dev/artifacts/eas/k7VYj8PW7dCaQNMKWzALoe.apk',
+            });
+        } catch (error) {
+            Alert.alert('Error', 'Failed to share the app.');
+        }
     };
 
     return (
@@ -92,6 +102,13 @@ export default function AboutScreen() {
                     onPress={() => Linking.openURL('https://t.me/SofleetoAllah26')}
                 >
                     <Text style={styles.saveButtonText}>Telegram @SofleetoAllah26</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.saveButton, { backgroundColor: theme.tint, marginTop: 10 }]}
+                    onPress={handleShare}
+                >
+                    <Text style={styles.saveButtonText}>Share App</Text>
                 </TouchableOpacity>
 
                 <View style={styles.infoSection}>
