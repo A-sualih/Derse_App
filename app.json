@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "   የሸህ አቡ ኒብራስ ደርሶች",
+    "name": "الحموية - الشيخ አቡ ኒብራስ",
     "slug": "DerseApp",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,7 +8,7 @@
     "scheme": "derseapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "package": "com.sualih.DerseApp",
+    "package": "com.sualih.Hamuwiya",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -32,7 +32,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.sualih.DerseApp",
+      "package": "com.sualih.Hamuwiya",
       "permissions": [
         "WAKE_LOCK",
         "FOREGROUND_SERVICE",
