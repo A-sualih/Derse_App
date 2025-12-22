@@ -4,7 +4,7 @@ import { useUser } from '@/src/context/UserContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AboutScreen() {
@@ -82,10 +82,16 @@ export default function AboutScreen() {
                     <Text style={styles.saveButtonText}>Save Profile</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.saveButton, { backgroundColor: theme.tint }]}
-                    onPress={handleSave}
+                    style={[styles.saveButton, { backgroundColor: theme.tint, marginTop: 10 }]}
+                    onPress={() => Linking.openURL('tel:+251926342943')}
                 >
-                    <Text style={styles.saveButtonText}>Contact Us +251 0926342943</Text>
+                    <Text style={styles.saveButtonText}>Contact Us +251 926 342 943</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.saveButton, { backgroundColor: '#0088cc', marginTop: 10 }]}
+                    onPress={() => Linking.openURL('https://t.me/SofleetoAllah26')}
+                >
+                    <Text style={styles.saveButtonText}>Telegram @SofleetoAllah26</Text>
                 </TouchableOpacity>
 
                 <View style={styles.infoSection}>
