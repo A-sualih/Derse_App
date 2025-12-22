@@ -4,11 +4,13 @@ import { DRIVE_FILES } from '@/src/constants/mockData';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAudioPlayer } from '@/src/hooks/useAudioPlayer';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function App() {
+  const router = useRouter();
   const { colorScheme, setThemePreference } = useTheme();
   const theme = Colors[colorScheme];
 
@@ -33,13 +35,22 @@ export default function App() {
       <View style={[styles.header, { backgroundColor: theme.background, borderBottomColor: colorScheme === 'dark' ? '#333' : '#e0e0e0' }]}>
         <View style={styles.headerContent}>
           <Text style={[styles.headerTitle, { color: theme.text }]}>ሙምቲዕ ደርስ በ ኡስታዝ አቡ ጁወይሪያ</Text>
-          <TouchableOpacity onPress={toggleTheme} style={styles.themeToggle}>
-            <Ionicons
-              name={colorScheme === 'dark' ? "sunny" : "moon"}
-              size={24}
-              color={theme.text}
-            />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity onPress={() => router.push('/about')} style={styles.iconButton}>
+              <Ionicons
+                name="person-circle-outline"
+                size={24}
+                color={theme.text}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={toggleTheme} style={styles.themeToggle}>
+              <Ionicons
+                name={colorScheme === 'dark' ? "sunny" : "moon"}
+                size={24}
+                color={theme.text}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
       <FlatList
@@ -84,6 +95,15 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
+    flex: 1,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconButton: {
+    padding: 8,
+    marginRight: 8,
   },
   themeToggle: {
     padding: 8,

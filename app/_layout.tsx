@@ -7,6 +7,8 @@ import { useColorScheme } from '../hooks/use-color-scheme';
 import { AudioProvider } from '../src/context/AudioContext';
 import { ThemeProvider as AppThemeProvider } from '../src/context/ThemeContext';
 
+import { UserProvider } from '../src/context/UserContext';
+
 export const unstable_settings = {
   anchor: '(tabs)',
 };
@@ -15,7 +17,9 @@ export default function RootLayout() {
   return (
     <AppThemeProvider>
       <AudioProvider>
-        <LayoutContent />
+        <UserProvider>
+          <LayoutContent />
+        </UserProvider>
       </AudioProvider>
     </AppThemeProvider>
   );
@@ -28,6 +32,7 @@ function LayoutContent() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="pdf-viewer" options={{ title: 'PDF Viewer' }} />
+        <Stack.Screen name="about" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
