@@ -130,7 +130,7 @@ export const CATEGORIES: Category[] = [
     {
         id: 'hamuwiya',
         title: 'الحموية لابن تيمية',
-        description: 'በ ኡስታዛ አቡ ኒብራስ ሙስጠፋ የቀረበ',
+        description: 'በ ሸህ አቡ ኒብራስ ሙስጠፋ የቀረበ',
         files: HAMUWIYA_FILES,
     },
     {
