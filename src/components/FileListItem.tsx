@@ -18,6 +18,8 @@ interface FileListItemProps {
     isAudioLoading?: boolean;
     position?: number;
     duration?: number;
+    playbackSpeed?: number;
+    onSetSpeed?: (speed: number) => void;
 }
 
 export const FileListItem: React.FC<FileListItemProps> = ({
@@ -29,7 +31,9 @@ export const FileListItem: React.FC<FileListItemProps> = ({
     isCurrent,
     isAudioLoading,
     position = 0,
-    duration = 0
+    duration = 0,
+    playbackSpeed = 1.0,
+    onSetSpeed
 }) => {
     const colorScheme = useColorScheme() ?? 'light';
     const theme = Colors[colorScheme];
@@ -141,6 +145,17 @@ export const FileListItem: React.FC<FileListItemProps> = ({
             {isCurrent && file.type === 'audio' && (
                 <View style={styles.progressContainer}>
                     <View style={styles.controlsRow}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                const speeds = [1.0, 1.25, 1.5, 1.75, 2.0];
+                                const nextIndex = (speeds.indexOf(playbackSpeed) + 1) % speeds.length;
+                                onSetSpeed?.(speeds[nextIndex]);
+                            }}
+                            style={styles.speedToggle}
+                        >
+                            <Text style={styles.speedText}>{playbackSpeed}x</Text>
+                        </TouchableOpacity>
+
                         <TouchableOpacity onPress={() => onSeek && onSeek(Math.max(0, position - 10000))} style={styles.controlBtn}>
                             <Ionicons name="refresh-outline" size={24} color="#007AFF" />
                             <Text style={styles.controlText}>-10s</Text>
@@ -239,6 +254,19 @@ const styles = StyleSheet.create({
         fontSize: 10,
         color: '#007AFF',
         marginTop: -2,
+    },
+    speedToggle: {
+        backgroundColor: '#007AFF10',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#007AFF30',
+    },
+    speedText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#007AFF',
     },
     slider: {
         width: '100%',

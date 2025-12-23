@@ -20,7 +20,9 @@ export const MiniPlayer: React.FC = () => {
         seekScroll,
         skip,
         nextTrack,
-        previousTrack
+        previousTrack,
+        playbackSpeed,
+        setPlaybackSpeed
     } = useAudio();
     const colorScheme = useColorScheme() ?? 'light';
     const theme = Colors[colorScheme];
@@ -42,12 +44,22 @@ export const MiniPlayer: React.FC = () => {
         }
     };
 
+    const handleSpeedCycle = () => {
+        const speeds = [1.0, 1.25, 1.5, 1.75, 2.0];
+        const currentIndex = speeds.indexOf(playbackSpeed);
+        const nextIndex = (currentIndex + 1) % speeds.length;
+        setPlaybackSpeed(speeds[nextIndex]);
+    };
+
     return (
         <>
             <View style={[styles.container, { backgroundColor: theme.tint }]}>
                 <View style={styles.header}>
                     <Text style={[styles.title, { color: colorScheme === 'dark' ? '#000' : '#fff' }]} numberOfLines={1}>{trackName}</Text>
                     <View style={styles.headerButtons}>
+                        <TouchableOpacity onPress={handleSpeedCycle} style={styles.speedBtn}>
+                            <Text style={[styles.speedText, { color: colorScheme === 'dark' ? '#000' : '#fff' }]}>{playbackSpeed}x</Text>
+                        </TouchableOpacity>
                         <TouchableOpacity onPress={() => setShowTrackList(true)} style={styles.iconBtn}>
                             <Ionicons name="list" size={24} color={colorScheme === 'dark' ? '#000' : '#fff'} />
                         </TouchableOpacity>
@@ -178,6 +190,18 @@ const styles = StyleSheet.create({
         height: 40,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    speedBtn: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.3)',
+    },
+    speedText: {
+        fontSize: 12,
+        fontWeight: 'bold',
     },
     playBtn: {
         width: 44,
