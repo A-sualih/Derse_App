@@ -225,6 +225,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingBottom: 8,
     },
+    
     controlsRow: {
         flexDirection: 'row',
         alignItems: 'center',

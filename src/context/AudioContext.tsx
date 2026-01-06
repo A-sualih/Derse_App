@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { Audio as ExpoAV } from 'expo-av';
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Platform } from 'react-native';
 import { DRIVE_FILES } from '../constants/mockData';
 import { DriveFile } from '../types';
+import { checkFileExists, getLocalUri } from '../utils/fileSystem';
 
 interface AudioContextType {
     isPlaying: boolean;
@@ -38,8 +38,8 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     // Sync status back to our context-friendly state
     const isPlaying = localIsPlaying;
-    const position = status.currentTime * 1000; // status is in seconds, we use ms for compatibility
-    const duration = status.duration * 1000;
+    const position = isFinite(status.currentTime) ? status.currentTime * 1000 : 0;
+    const duration = isFinite(status.duration) ? status.duration * 1000 : 0;
 
     // Sync localIsPlaying with native status, but skip while loading or during transitions
     useEffect(() => {
@@ -55,9 +55,7 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 await setAudioModeAsync({
                     playsInSilentMode: true,
                     shouldPlayInBackground: true,
-                    // casting to any because expo-audio types expect a string union, but native expects an Enum value
-                    // @ts-ignore - Enum might be defined differently in this version of expo-av
-                    interruptionMode: (ExpoAV as any).INTERRUPTION_MODE_ANDROID_DUCK_OTHERS,
+                    interruptionMode: 'duckOthers' as any,
                 });
                 console.log('Audio mode configured for background playback');
             } catch (error) {
@@ -101,13 +99,15 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     // Handle completion
     useEffect(() => {
-        if (status.didJustFinish) {
+        // useAudioPlayerStatus doesn't have didJustFinish like expo-av, 
+        // we check if currentTime is >= duration and not playing
+        if (status.currentTime >= status.duration && status.duration > 0 && !status.playing) {
             player.seekTo(0).catch(err => console.error('Seek to start error:', err));
             if (currentUri) {
                 AsyncStorage.removeItem(getPersistenceKey(currentUri));
             }
         }
-    }, [status.didJustFinish, currentUri, player]);
+    }, [status.currentTime, status.duration, status.playing, currentUri, player]);
 
     // Save position periodically when playing
     useEffect(() => {
@@ -213,6 +213,7 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const seekScroll = async (value: number) => {
         try {
+            if (!isFinite(value) || value < 0) return;
             await player.seekTo(value / 1000);
             if (currentUri) {
                 AsyncStorage.setItem(getPersistenceKey(currentUri), value.toString());
@@ -224,7 +225,8 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const skip = async (seconds: number) => {
         try {
             const newPosition = position + seconds * 1000;
-            const clampedPosition = Math.max(0, Math.min(newPosition, duration));
+            const clampedPosition = Math.max(0, Math.min(newPosition, duration || 0));
+            if (!isFinite(clampedPosition)) return;
             await player.seekTo(clampedPosition / 1000);
             if (currentUri) {
                 AsyncStorage.setItem(getPersistenceKey(currentUri), clampedPosition.toString());
@@ -234,40 +236,50 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     };
 
-    const nextTrack = () => {
+    const nextTrack = async () => {
         const audioFiles = currentQueue.filter(file => file.type === 'audio');
-        let currentIndex = -1;
+        if (audioFiles.length === 0) return;
 
+        let currentIndex = -1;
         if (currentFileId) {
             currentIndex = audioFiles.findIndex(file => file.id === currentFileId);
         }
-
         if (currentIndex === -1) {
-            currentIndex = audioFiles.findIndex(file => file.url === currentUri);
+            currentIndex = audioFiles.findIndex(file => file.url === currentUri || getLocalUri(file.name) === currentUri);
         }
 
-        if (currentIndex !== -1 && currentIndex < audioFiles.length - 1) {
-            const nextFile = audioFiles[currentIndex + 1];
-            playSound(nextFile.url, nextFile.name, currentQueue, nextFile.id);
-        }
+        const nextIndex = (currentIndex + 1) % audioFiles.length;
+        const nextFile = audioFiles[nextIndex];
+
+        // Check if file is downloaded to use local URI
+        const isDownloaded = await checkFileExists(nextFile.name);
+        const nextUri = isDownloaded ? getLocalUri(nextFile.name) || nextFile.url : nextFile.url;
+
+        playSound(nextUri, nextFile.name, currentQueue, nextFile.id);
     };
 
-    const previousTrack = () => {
+    const previousTrack = async () => {
         const audioFiles = currentQueue.filter(file => file.type === 'audio');
-        let currentIndex = -1;
+        if (audioFiles.length === 0) return;
 
+        let currentIndex = -1;
         if (currentFileId) {
             currentIndex = audioFiles.findIndex(file => file.id === currentFileId);
         }
-
         if (currentIndex === -1) {
-            currentIndex = audioFiles.findIndex(file => file.url === currentUri);
+            currentIndex = audioFiles.findIndex(file => file.url === currentUri || getLocalUri(file.name) === currentUri);
         }
 
-        if (currentIndex > 0) {
-            const prevFile = audioFiles[currentIndex - 1];
-            playSound(prevFile.url, prevFile.name, currentQueue, prevFile.id);
-        }
+        let prevIndex = currentIndex - 1;
+        if (prevIndex < 0) prevIndex = audioFiles.length - 1;
+
+        const prevFile = audioFiles[prevIndex];
+
+        // Check if file is downloaded to use local URI
+        const isDownloaded = await checkFileExists(prevFile.name);
+        const prevUri = isDownloaded ? getLocalUri(prevFile.name) || prevFile.url : prevFile.url;
+
+        playSound(prevUri, prevFile.name, currentQueue, prevFile.id);
     };
 
 
