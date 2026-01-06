@@ -1,20 +1,18 @@
 {
   "expo": {
-    "name": "  የሸህ አቡ ኒብራስ ደርሶች App ",
-    "slug": "DerseApp",
+    "name": "የሸህ አቡ ኒብራስ ደርሶች",
+    "slug": "sheikh-abu-nibras-ders",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "derseapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "package": "com.sualih.DerseApp",
+    "package": "com.sualih.abunibras.ders",
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "updates": {
-      "url": "https://u.expo.dev/178aa31d-d9a1-4baf-ad07-4eaba4012ec0"
-    },
+    "updates": {},
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -32,7 +30,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.sualih.DerseApp",
+      "package": "com.sualih.abunibras.ders",
       "permissions": [
         "WAKE_LOCK",
         "FOREGROUND_SERVICE",
@@ -75,9 +73,7 @@
     },
     "extra": {
       "router": {},
-      "eas": {
-        "projectId": "178aa31d-d9a1-4baf-ad07-4eaba4012ec0"
-      }
+      "eas": {}
     },
     "owner": "abumahi"
   }
