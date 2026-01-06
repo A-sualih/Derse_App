@@ -20,6 +20,8 @@ interface AudioContextType {
     skip: (seconds: number) => Promise<void>;
     nextTrack: () => void;
     previousTrack: () => void;
+    playbackSpeed: number;
+    setPlaybackSpeed: (speed: number) => Promise<void>;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -32,6 +34,7 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const player = useAudioPlayer(currentUri);
     const status = useAudioPlayerStatus(player);
     const [isLoading, setIsLoading] = useState(false);
+    const [playbackSpeed, setPlaybackSpeedState] = useState(1.0);
     const positionSaveInterval = useRef<any>(null);
     const pendingSeekPosition = useRef<number | null>(null);
     const shouldAutoPlay = useRef(false);
@@ -77,23 +80,26 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             console.log('Restoring position:', posToRestore / 1000, 'seconds');
             player.seekTo(posToRestore / 1000)
                 .then(() => {
+                    player.setPlaybackRate(playbackSpeed);
                     player.play();
                     shouldAutoPlay.current = false;
                     setIsLoading(false);
                 })
                 .catch((error) => {
                     console.error('Error restoring position:', error);
+                    player.setPlaybackRate(playbackSpeed);
                     player.play();
                     shouldAutoPlay.current = false;
                     setIsLoading(false);
                 });
         } else if (status.duration > 0) {
             // No saved position, just play
+            player.setPlaybackRate(playbackSpeed);
             player.play();
             shouldAutoPlay.current = false;
             setIsLoading(false);
         }
-    }, [currentUri, status.duration, player]);
+    }, [currentUri, status.duration, player, playbackSpeed]);
 
     const getPersistenceKey = (uri: string) => `audio_pos_${encodeURIComponent(uri)} `;
 
@@ -131,7 +137,27 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const [currentQueue, setCurrentQueue] = useState<DriveFile[]>(DRIVE_FILES);
 
-    // ... (rest of the effects)
+    useEffect(() => {
+        const loadSpeed = async () => {
+            try {
+                const savedSpeed = await AsyncStorage.getItem('audio_playback_speed');
+                if (savedSpeed) {
+                    setPlaybackSpeedState(parseFloat(savedSpeed));
+                }
+            } catch (e) { }
+        };
+        loadSpeed();
+    }, []);
+
+    const setPlaybackSpeed = async (speed: number) => {
+        try {
+            setPlaybackSpeedState(speed);
+            player.setPlaybackRate(speed);
+            await AsyncStorage.setItem('audio_playback_speed', speed.toString());
+        } catch (e) {
+            console.error('Error setting playback speed:', e);
+        }
+    };
 
     const playSound = async (uri: string, title?: string, queue?: DriveFile[], fileId?: string) => {
         try {
@@ -286,7 +312,8 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return (
         <AudioContext.Provider value={{
             isPlaying, isLoading, currentUri, currentTitle, currentFileId, position, duration,
-            playSound, pauseSound, seekScroll, skip, nextTrack, previousTrack
+            playSound, pauseSound, seekScroll, skip, nextTrack, previousTrack,
+            playbackSpeed, setPlaybackSpeed
         }}>
             {children}
         </AudioContext.Provider>

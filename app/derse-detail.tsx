@@ -25,7 +25,9 @@ export default function DerseDetailScreen() {
         currentUri,
         isLoading,
         position,
-        duration
+        duration,
+        playbackSpeed,
+        setPlaybackSpeed
     } = useAudioPlayer();
 
     const toggleTheme = () => {
@@ -76,6 +78,8 @@ export default function DerseDetailScreen() {
                             isAudioLoading={isLoading}
                             position={isItemCurrent ? position : 0}
                             duration={isItemCurrent ? duration : 0}
+                            playbackSpeed={isItemCurrent ? playbackSpeed : 1.0}
+                            onSetSpeed={setPlaybackSpeed}
                         />
                     );
                 }}

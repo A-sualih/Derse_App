@@ -63,7 +63,7 @@ const NativePdf: React.FC<NativePdfProps> = ({ url, remoteUrl, targetPage = 1, z
             <script>
                 const initialUrl = "${url}";
                 const targetPage = ${targetPage};
-                const zoomLevel = ${zoom};
+                const zoomLevel = 1.0;
                 const isDark = ${colorScheme === 'dark'};
                 
                 let pdfDoc = null;
@@ -174,6 +174,37 @@ const NativePdf: React.FC<NativePdfProps> = ({ url, remoteUrl, targetPage = 1, z
                     }
                 }
 
+                async function updateZoom(newZoom) {
+                    if (!pdfDoc) return;
+                    const oldScrollY = window.scrollY;
+                    const oldPageTotalHeight = pageTotalHeight;
+                    
+                    const firstPage = await pdfDoc.getPage(1);
+                    const unscaledViewport = firstPage.getViewport({ scale: 1.0 });
+                    const baseScale = window.innerWidth / unscaledViewport.width;
+                    
+                    scale = baseScale * newZoom;
+                    pageHeight = unscaledViewport.height * scale;
+                    pageTotalHeight = pageHeight + 20;
+
+                    // Update all placeholders
+                    document.querySelectorAll('.page-container').forEach(container => {
+                        container.style.height = pageHeight + 'px';
+                        // Clear canvases for re-render at new scale
+                        container.querySelectorAll('canvas').forEach(c => c.remove());
+                    });
+                    
+                    renderedPages.clear();
+
+                    // Restore relative scroll position
+                    const relativeScroll = oldScrollY / oldPageTotalHeight;
+                    window.scrollTo(0, relativeScroll * pageTotalHeight);
+
+                    // Re-render visible pages
+                    const visiblePage = Math.floor((window.scrollY + window.innerHeight/4) / pageTotalHeight) + 1;
+                    renderPage(visiblePage);
+                }
+
                 // For Android: Wait for base64 injection from React Native
                 // The base64 data will be injected via the useEffect below
             </script>
@@ -198,6 +229,12 @@ const NativePdf: React.FC<NativePdfProps> = ({ url, remoteUrl, targetPage = 1, z
             }, 100);
         }
     }, [base64, isReading]);
+
+    useEffect(() => {
+        if (webViewRef.current && zoom > 0) {
+            webViewRef.current.injectJavaScript(`if(typeof updateZoom !== "undefined") updateZoom(${zoom});`);
+        }
+    }, [zoom]);
 
     if (Platform.OS === 'ios') {
         return (
