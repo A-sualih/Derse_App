@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme';
+import { Colors, Radius, Shadows, Spacing } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -16,22 +16,35 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({ category, onPress })
 
     return (
         <TouchableOpacity
-            style={[styles.card, { backgroundColor: colorScheme === 'dark' ? '#1e1e1e' : '#fff', borderColor: colorScheme === 'dark' ? '#333' : '#eee' }]}
+            style={[
+                styles.card,
+                {
+                    backgroundColor: theme.surface,
+                    borderColor: theme.border,
+                },
+                Shadows.sm
+            ]}
             onPress={onPress}
+            activeOpacity={0.7}
         >
-            <View style={[styles.iconContainer, { backgroundColor: theme.tint + '20' }]}>
-                <Ionicons name="library" size={32} color={theme.tint} />
+            <View style={[styles.iconContainer, { backgroundColor: theme.primary + '10' }]}>
+                <Ionicons name="folder-open" size={28} color={theme.primary} />
             </View>
             <View style={styles.cardContent}>
-                <Text style={[styles.title, { color: theme.text }]}>{category.title}</Text>
+                <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{category.title}</Text>
                 {category.description && (
-                    <Text style={[styles.description, { color: theme.secondaryText }]}>{category.description}</Text>
+                    <Text style={[styles.description, { color: theme.secondaryText }]} numberOfLines={2}>{category.description}</Text>
                 )}
-                <Text style={[styles.fileCount, { color: theme.tint }]}>
-                    {category.files.length} {category.files.length === 1 ? 'file' : 'files'}
-                </Text>
+                <View style={styles.metaRow}>
+                    <Ionicons name="documents-outline" size={14} color={theme.primary} style={styles.metaIcon} />
+                    <Text style={[styles.fileCount, { color: theme.primary }]}>
+                        {category.files.length} {category.files.length === 1 ? 'ትምህርት' : 'ትምህርቶች'}
+                    </Text>
+                </View>
             </View>
-            <Ionicons name="chevron-forward" size={24} color={theme.secondaryText} />
+            <View style={styles.arrowContainer}>
+                <Ionicons name="chevron-forward" size={20} color={theme.icon} />
+            </View>
         </TouchableOpacity>
     );
 };
@@ -40,39 +53,46 @@ const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
-        marginHorizontal: 16,
-        marginVertical: 8,
-        borderRadius: 12,
+        padding: Spacing.md,
+        marginHorizontal: Spacing.md,
+        marginVertical: Spacing.sm,
+        borderRadius: Radius.lg,
         borderWidth: 1,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
     },
     iconContainer: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
+        width: 56,
+        height: 56,
+        borderRadius: Radius.md,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 16,
+        marginRight: Spacing.md,
     },
     cardContent: {
         flex: 1,
     },
     title: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 4,
+        fontSize: 17,
+        fontWeight: '700',
+        marginBottom: 2,
+        letterSpacing: -0.2,
     },
     description: {
-        fontSize: 14,
-        marginBottom: 4,
+        fontSize: 13,
+        lineHeight: 18,
+        marginBottom: Spacing.xs,
+    },
+    metaRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    metaIcon: {
+        marginRight: 4,
     },
     fileCount: {
         fontSize: 12,
         fontWeight: '600',
+    },
+    arrowContainer: {
+        marginLeft: Spacing.sm,
     },
 });

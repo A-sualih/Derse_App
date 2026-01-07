@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme';
+import { Colors, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useUser } from '@/src/context/UserContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,99 +27,116 @@ export default function AboutScreen() {
 
     const handleSave = async () => {
         await saveProfile({ name, phoneNumber, username });
-        Alert.alert('Success', 'Profile updated successfully!');
+        Alert.alert('ተሳክቷል', 'መረጃዎ በትክክል ተቀምጧል!');
     };
 
     const handleShare = async () => {
         try {
             await Share.share({
-                message: 'Check out Derse App! Download it now: https://expo.dev/artifacts/eas/k7VYj8PW7dCaQNMKWzALoe.apk',
+                message: 'የሸህ አቡ ኒብራስ ደርሶችን ለማግኘት ይህን አፕ ይጠቀሙ: https://expo.dev/artifacts/eas/7v7M1p3o2AUhYEGczPV24E.apk',
             });
         } catch (error) {
-            Alert.alert('Error', 'Failed to share the app.');
+            Alert.alert('ስህተት', 'ሊጋራ አልቻለም።');
         }
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-            <View style={[styles.header, { borderBottomColor: colorScheme === 'dark' ? '#333' : '#e0e0e0' }]}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color={theme.text} />
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                    <Ionicons name="chevron-back" size={24} color={theme.primary} />
                 </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: theme.text }]}>About Me</Text>
-                <View style={{ width: 24 }} />
+                <Text style={[styles.headerTitle, { color: theme.text }]}>መገለጫ</Text>
+                <View style={{ width: 44 }} />
             </View>
 
-            <ScrollView contentContainerStyle={styles.content}>
-                <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: theme.text }]}>Name</Text>
-                    <TextInput
-                        style={[styles.input, { color: theme.text, borderColor: colorScheme === 'dark' ? '#555' : '#ccc', backgroundColor: colorScheme === 'dark' ? '#222' : '#fff' }]}
-                        value={name}
-                        onChangeText={setName}
-                        placeholder="Enter your name"
-                        placeholderTextColor={colorScheme === 'dark' ? '#888' : '#aaa'}
-                    />
+            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+                <View style={styles.profileSection}>
+                    <View style={[styles.avatarContainer, { backgroundColor: theme.primary + '10' }]}>
+                        <Ionicons name="person" size={40} color={theme.primary} />
+                    </View>
+                    <Text style={[styles.profileHint, { color: theme.secondaryText }]}>መረጃዎትን እዚህ ማስተካከል ይችላሉ</Text>
                 </View>
 
-                <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: theme.text }]}>Username</Text>
-                    <TextInput
-                        style={[styles.input, { color: theme.text, borderColor: colorScheme === 'dark' ? '#555' : '#ccc', backgroundColor: colorScheme === 'dark' ? '#222' : '#fff' }]}
-                        value={username}
-                        onChangeText={setUsername}
-                        placeholder="Enter your username"
-                        placeholderTextColor={colorScheme === 'dark' ? '#888' : '#aaa'}
-                    />
+                <View style={styles.form}>
+                    <View style={styles.inputGroup}>
+                        <Text style={[styles.label, { color: theme.text }]}>ስም</Text>
+                        <TextInput
+                            style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.surface }]}
+                            value={name}
+                            onChangeText={setName}
+                            placeholder="ስምዎን ያስገቡ"
+                            placeholderTextColor={theme.secondaryText + '80'}
+                        />
+                    </View>
+
+                    <View style={styles.inputGroup}>
+                        <Text style={[styles.label, { color: theme.text }]}>የተጠቃሚ ስም</Text>
+                        <TextInput
+                            style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.surface }]}
+                            value={username}
+                            onChangeText={setUsername}
+                            placeholder="የተጠቃሚ ስም ያስገቡ"
+                            placeholderTextColor={theme.secondaryText + '80'}
+                        />
+                    </View>
+
+                    <View style={styles.inputGroup}>
+                        <Text style={[styles.label, { color: theme.text }]}>ስልክ ቁጥር</Text>
+                        <TextInput
+                            style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.surface }]}
+                            value={phoneNumber}
+                            onChangeText={setPhoneNumber}
+                            placeholder="ስልክ ቁጥር ያስገቡ"
+                            keyboardType="phone-pad"
+                            placeholderTextColor={theme.secondaryText + '80'}
+                        />
+                    </View>
+
+                    <TouchableOpacity
+                        style={[styles.primaryButton, { backgroundColor: theme.primary }]}
+                        onPress={handleSave}
+                    >
+                        <Text style={styles.buttonText}>መረጃን አድን</Text>
+                    </TouchableOpacity>
                 </View>
 
-                <View style={styles.inputGroup}>
-                    <Text style={[styles.label, { color: theme.text }]}>Phone Number</Text>
-                    <TextInput
-                        style={[styles.input, { color: theme.text, borderColor: colorScheme === 'dark' ? '#555' : '#ccc', backgroundColor: colorScheme === 'dark' ? '#222' : '#fff' }]}
-                        value={phoneNumber}
-                        onChangeText={setPhoneNumber}
-                        placeholder="Enter your phone number"
-                        keyboardType="phone-pad"
-                        placeholderTextColor={colorScheme === 'dark' ? '#888' : '#aaa'}
-                    />
+                <View style={styles.contactSection}>
+                    <Text style={[styles.sectionTitle, { color: theme.text }]}>አግኙን</Text>
+
+                    <TouchableOpacity
+                        style={[styles.contactItem, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                        onPress={() => Linking.openURL('tel:+251926342943')}
+                    >
+                        <Ionicons name="call-outline" size={20} color={theme.primary} />
+                        <Text style={[styles.contactText, { color: theme.text }]}>+251 926 342 943</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.contactItem, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                        onPress={() => Linking.openURL('https://t.me/SofleetoAllah26')}
+                    >
+                        <Ionicons name="paper-plane-outline" size={20} color={theme.primary} />
+                        <Text style={[styles.contactText, { color: theme.text }]}>ቴሌግራም @SofleetoAllah26</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.contactItem, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                        onPress={handleShare}
+                    >
+                        <Ionicons name="share-social-outline" size={20} color={theme.primary} />
+                        <Text style={[styles.contactText, { color: theme.text }]}>አፑን ለሌሎች ያጋሩ</Text>
+                    </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity
-                    style={[styles.saveButton, { backgroundColor: theme.tint }]}
-                    onPress={handleSave}
-                >
-                    <Text style={styles.saveButtonText}>Save Profile</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.saveButton, { backgroundColor: theme.tint, marginTop: 10 }]}
-                    onPress={() => Linking.openURL('tel:+251926342943')}
-                >
-                    <Text style={styles.saveButtonText}>Contact Us +251 926 342 943</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.saveButton, { backgroundColor: '#0088cc', marginTop: 10 }]}
-                    onPress={() => Linking.openURL('https://t.me/SofleetoAllah26')}
-                >
-                    <Text style={styles.saveButtonText}>Telegram @SofleetoAllah26</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.saveButton, { backgroundColor: theme.tint, marginTop: 10 }]}
-                    onPress={handleShare}
-                >
-                    <Text style={styles.saveButtonText}>Share App</Text>
-                </TouchableOpacity>
-
-                <View style={styles.infoSection}>
-                    <Text style={[styles.infoText, { color: theme.secondaryText }]}>
-                        Developed by Derse App Team.
+                <View style={styles.footer}>
+                    <Text style={[styles.footerText, { color: theme.secondaryText }]}>
+                        Developed with ❤️ by Derse Team
                     </Text>
                     <Text style={[styles.versionText, { color: theme.secondaryText }]}>
-                        Version 1.0.0
+                        ስሪት 1.0.0
                     </Text>
                 </View>
-
             </ScrollView>
         </SafeAreaView>
     );
@@ -133,53 +150,109 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: 16,
-        borderBottomWidth: 1,
+        paddingHorizontal: Spacing.md,
+        paddingTop: Spacing.md,
+        paddingBottom: Spacing.sm,
     },
     backButton: {
-        padding: 4,
+        width: 44,
+        height: 44,
+        borderRadius: Radius.md,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
     },
     headerTitle: {
         fontSize: 20,
-        fontWeight: 'bold',
+        fontWeight: '800',
+        letterSpacing: -0.5,
     },
     content: {
-        padding: 20,
+        paddingHorizontal: Spacing.lg,
+        paddingBottom: Spacing.xxl,
+    },
+    profileSection: {
+        alignItems: 'center',
+        marginVertical: Spacing.xl,
+    },
+    avatarContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: Radius.xxl,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: Spacing.sm,
+    },
+    profileHint: {
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    form: {
+        marginBottom: Spacing.xl,
     },
     inputGroup: {
-        marginBottom: 20,
+        marginBottom: Spacing.md,
     },
     label: {
-        fontSize: 16,
-        marginBottom: 8,
-        fontWeight: '500',
+        fontSize: 14,
+        marginBottom: 6,
+        fontWeight: '700',
+        marginLeft: 4,
     },
     input: {
         borderWidth: 1,
-        borderRadius: 8,
-        padding: 12,
+        borderRadius: Radius.lg,
+        padding: 14,
         fontSize: 16,
     },
-    saveButton: {
-        marginTop: 20,
+    primaryButton: {
+        marginTop: Spacing.md,
         padding: 16,
-        borderRadius: 8,
+        borderRadius: Radius.lg,
         alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 2,
     },
-    saveButtonText: {
+    buttonText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '700',
     },
-    infoSection: {
-        marginTop: 40,
+    contactSection: {
+        marginTop: Spacing.md,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '800',
+        marginBottom: Spacing.md,
+    },
+    contactItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        borderRadius: Radius.lg,
+        borderWidth: 1,
+        marginBottom: Spacing.sm,
+        gap: Spacing.md,
+    },
+    contactText: {
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    footer: {
+        marginTop: Spacing.xxl,
         alignItems: 'center',
     },
-    infoText: {
-        fontSize: 14,
-        marginBottom: 4,
+    footerText: {
+        fontSize: 13,
+        fontWeight: '500',
     },
     versionText: {
-        fontSize: 12,
+        fontSize: 11,
+        fontWeight: '400',
+        marginTop: 4,
     }
 });

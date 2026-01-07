@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme';
+import { Colors, Radius, Spacing } from '@/constants/theme';
 import { FileListItem } from '@/src/components/FileListItem';
 import { CATEGORIES } from '@/src/constants/mockData';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -37,7 +37,10 @@ export default function DerseDetailScreen() {
     if (!category) {
         return (
             <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-                <Text style={{ color: theme.text }}>Category not found</Text>
+                <View style={styles.emptyContainer}>
+                    <Ionicons name="alert-circle-outline" size={48} color={theme.secondaryText} />
+                    <Text style={[styles.emptyText, { color: theme.text }]}>ዘርፉ አልተገኘም</Text>
+                </View>
             </SafeAreaView>
         );
     }
@@ -45,28 +48,34 @@ export default function DerseDetailScreen() {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
             <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
-            <View style={[styles.header, { backgroundColor: theme.background, borderBottomColor: colorScheme === 'dark' ? '#333' : '#e0e0e0' }]}>
-                <View style={styles.headerContent}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color={theme.text} />
+
+            <View style={styles.header}>
+                <View style={styles.headerTop}>
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        style={[styles.backButton, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                    >
+                        <Ionicons name="chevron-back" size={24} color={theme.primary} />
                     </TouchableOpacity>
-                    <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>{category.title}</Text>
-                    <View style={styles.headerActions}>
-                        <TouchableOpacity onPress={toggleTheme} style={styles.themeToggle}>
-                            <Ionicons
-                                name={colorScheme === 'dark' ? "sunny" : "moon"}
-                                size={24}
-                                color={theme.text}
-                            />
-                        </TouchableOpacity>
+                    <View style={styles.titleContainer}>
+                        <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>{category.title}</Text>
+                        <Text style={[styles.subTitle, { color: theme.secondaryText }]}>{category.files.length} ትምህርቶች</Text>
                     </View>
+                    <TouchableOpacity onPress={toggleTheme} style={[styles.actionButton, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                        <Ionicons
+                            name={colorScheme === 'dark' ? "sunny" : "moon"}
+                            size={20}
+                            color={theme.primary}
+                        />
+                    </TouchableOpacity>
                 </View>
             </View>
+
             <FlatList
                 data={category.files}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => {
-                    const isItemCurrent = currentUri?.endsWith(encodeURIComponent(item.name));
+                    const isItemCurrent = currentUri === item.url || currentUri?.endsWith(encodeURIComponent(item.name));
                     return (
                         <FileListItem
                             file={item}
@@ -84,6 +93,7 @@ export default function DerseDetailScreen() {
                     );
                 }}
                 contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
             />
         </SafeAreaView>
     );
@@ -94,30 +104,57 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     header: {
-        padding: 16,
-        borderBottomWidth: 1,
+        paddingHorizontal: Spacing.md,
+        paddingTop: Spacing.md,
+        paddingBottom: Spacing.sm,
     },
-    headerContent: {
+    headerTop: {
         flexDirection: 'row',
         alignItems: 'center',
-        width: '100%',
+        justifyContent: 'space-between',
+        gap: Spacing.md,
     },
     backButton: {
-        marginRight: 10,
+        width: 44,
+        height: 44,
+        borderRadius: Radius.md,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
     },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
+    titleContainer: {
         flex: 1,
     },
-    headerActions: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: '800',
+        letterSpacing: -0.5,
     },
-    themeToggle: {
-        padding: 8,
+    subTitle: {
+        fontSize: 13,
+        fontWeight: '500',
+    },
+    actionButton: {
+        width: 44,
+        height: 44,
+        borderRadius: Radius.md,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
     },
     listContent: {
-        paddingVertical: 10,
+        paddingTop: Spacing.sm,
+        paddingBottom: 100,
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: Spacing.xl,
+    },
+    emptyText: {
+        marginTop: Spacing.md,
+        fontSize: 18,
+        fontWeight: '600',
     },
 });

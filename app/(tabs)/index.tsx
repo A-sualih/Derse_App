@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme';
+import { Colors, Radius, Spacing } from '@/constants/theme';
 import { CategoryCard } from '@/src/components/CategoryCard';
 import { CATEGORIES } from '@/src/constants/mockData';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -20,27 +20,39 @@ export default function App() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
-      <View style={[styles.header, { backgroundColor: theme.background, borderBottomColor: colorScheme === 'dark' ? '#333' : '#e0e0e0' }]}>
-        <View style={styles.headerContent}>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>ደርሶች</Text>
+
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={[styles.greeting, { color: theme.secondaryText }]}>እንኳን ደህና መጡ</Text>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>የሸህ አቡ ኒብራስ ደርሶች</Text>
+          </View>
           <View style={styles.headerActions}>
-            <TouchableOpacity onPress={() => router.push('/about')} style={styles.iconButton}>
-              <Ionicons
-                name="person-circle-outline"
-                size={24}
-                color={theme.text}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={toggleTheme} style={styles.themeToggle}>
+            <TouchableOpacity onPress={toggleTheme} style={[styles.actionButton, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               <Ionicons
                 name={colorScheme === 'dark' ? "sunny" : "moon"}
-                size={24}
-                color={theme.text}
+                size={20}
+                color={theme.primary}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/about')} style={[styles.actionButton, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <Ionicons
+                name="person-outline"
+                size={20}
+                color={theme.primary}
               />
             </TouchableOpacity>
           </View>
         </View>
+
+        <View style={[styles.statsBar, { backgroundColor: theme.primary + '10' }]}>
+          <Ionicons name="information-circle" size={18} color={theme.primary} />
+          <Text style={[styles.statsText, { color: theme.primary }]}>
+            ያሉ የደርስ አይነቶች፡ {CATEGORIES.length}
+          </Text>
+        </View>
       </View>
+
       <FlatList
         data={CATEGORIES}
         keyExtractor={(item) => item.id}
@@ -48,12 +60,13 @@ export default function App() {
           <CategoryCard
             category={item}
             onPress={() => router.push({
-              pathname: '/derse-detail',
+              pathname: '/derse-detail' as any,
               params: { categoryId: item.id }
             })}
           />
         )}
         contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
@@ -64,32 +77,52 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    padding: 16,
-    borderBottomWidth: 1,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
   },
-  headerContent: {
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
+    alignItems: 'flex-start',
+    marginBottom: Spacing.md,
+  },
+  greeting: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 2,
   },
   headerTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
-    flex: 1,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   headerActions: {
     flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  actionButton: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.md,
+    justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
   },
-  iconButton: {
-    padding: 8,
-    marginRight: 8,
+  statsBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.md,
+    gap: Spacing.xs,
   },
-  themeToggle: {
-    padding: 8,
+  statsText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   listContent: {
-    paddingVertical: 10,
+    paddingTop: Spacing.sm,
+    paddingBottom: 100, // Space for mini player
   },
 });

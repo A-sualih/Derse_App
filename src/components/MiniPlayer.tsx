@@ -1,11 +1,11 @@
-import { Colors } from '@/constants/theme';
+import { Colors, Radius, Shadows, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { DRIVE_FILES } from '@/src/constants/mockData';
 import { useAudio } from '@/src/context/AudioContext';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import React, { useState } from 'react';
-import { ActivityIndicator, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export const MiniPlayer: React.FC = () => {
     const {
@@ -30,11 +30,8 @@ export const MiniPlayer: React.FC = () => {
 
     if (!currentUri) return null;
 
-    // Define audioFiles for the list modal
     const audioFiles = DRIVE_FILES.filter(file => file.type === 'audio');
-
-    // Use title from context, or fallback to "Audio"
-    const trackName = currentTitle || 'Audio';
+    const trackName = currentTitle || 'ተከታታይ ደርሶች';
 
     const handlePlayPause = () => {
         if (isPlaying) {
@@ -53,38 +50,22 @@ export const MiniPlayer: React.FC = () => {
 
     return (
         <>
-            <View style={[styles.container, { backgroundColor: theme.tint }]}>
-                <View style={styles.header}>
-                    <Text style={[styles.title, { color: colorScheme === 'dark' ? '#000' : '#fff' }]} numberOfLines={1}>{trackName}</Text>
-                    <View style={styles.headerButtons}>
-                        <TouchableOpacity onPress={handleSpeedCycle} style={styles.speedBtn}>
-                            <Text style={[styles.speedText, { color: colorScheme === 'dark' ? '#000' : '#fff' }]}>{playbackSpeed}x</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setShowTrackList(true)} style={styles.iconBtn}>
-                            <Ionicons name="list" size={24} color={colorScheme === 'dark' ? '#000' : '#fff'} />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={handlePlayPause} style={styles.playBtn}>
-                            {isLoading ? (
-                                <ActivityIndicator color={colorScheme === 'dark' ? '#000' : '#fff'} />
-                            ) : (
-                                <Ionicons
-                                    name={isPlaying ? "pause" : "play"}
-                                    size={28}
-                                    color={colorScheme === 'dark' ? '#000' : '#fff'}
-                                />
-                            )}
-                        </TouchableOpacity>
+            <View style={[styles.container, { backgroundColor: theme.surface, borderTopColor: theme.border }, Shadows.lg]}>
+                <View style={styles.content}>
+                    <View style={styles.header}>
+                        <View style={styles.infoContainer}>
+                            <Ionicons name="musical-note" size={20} color={theme.primary} style={styles.titleIcon} />
+                            <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{trackName}</Text>
+                        </View>
+                        <View style={styles.headerButtons}>
+                            <TouchableOpacity onPress={handleSpeedCycle} style={[styles.speedBtn, { backgroundColor: theme.primary + '15', borderColor: theme.primary + '30' }]}>
+                                <Text style={[styles.speedText, { color: theme.primary }]}>{playbackSpeed}x</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => setShowTrackList(true)} style={styles.iconBtn}>
+                                <Ionicons name="list" size={24} color={theme.icon} />
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </View>
-
-                <View style={styles.controlsRow}>
-                    <TouchableOpacity onPress={previousTrack} style={styles.skipBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                        <Ionicons name="play-skip-back" size={24} color={colorScheme === 'dark' ? '#000' : '#fff'} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={() => skip(-10)} style={styles.skipBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                        <Ionicons name="play-back" size={20} color={colorScheme === 'dark' ? '#000' : '#fff'} />
-                    </TouchableOpacity>
 
                     <Slider
                         style={styles.slider}
@@ -92,18 +73,52 @@ export const MiniPlayer: React.FC = () => {
                         maximumValue={duration}
                         value={position}
                         onSlidingComplete={seekScroll}
-                        minimumTrackTintColor={colorScheme === 'dark' ? '#000' : '#fff'}
-                        maximumTrackTintColor={colorScheme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.3)'}
-                        thumbTintColor={colorScheme === 'dark' ? '#000' : '#fff'}
+                        minimumTrackTintColor={theme.primary}
+                        maximumTrackTintColor={theme.border}
+                        thumbTintColor={theme.primary}
                     />
 
-                    <TouchableOpacity onPress={() => skip(10)} style={styles.skipBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                        <Ionicons name="play-forward" size={20} color={colorScheme === 'dark' ? '#000' : '#fff'} />
-                    </TouchableOpacity>
+                    <View style={styles.controlsRow}>
+                        <View style={styles.timeRow}>
+                            <Text style={[styles.timeText, { color: theme.secondaryText }]}>
+                                {Math.floor(position / 60)}:{(Math.floor(position % 60)).toString().padStart(2, '0')}
+                            </Text>
+                            <Text style={[styles.timeText, { color: theme.secondaryText }]}>
+                                {Math.floor(duration / 60)}:{(Math.floor(duration % 60)).toString().padStart(2, '0')}
+                            </Text>
+                        </View>
 
-                    <TouchableOpacity onPress={nextTrack} style={styles.skipBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                        <Ionicons name="play-skip-forward" size={24} color={colorScheme === 'dark' ? '#000' : '#fff'} />
-                    </TouchableOpacity>
+                        <View style={styles.mainControls}>
+                            <TouchableOpacity onPress={previousTrack} style={styles.skipBtn}>
+                                <Ionicons name="play-skip-back" size={24} color={theme.text} />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity onPress={() => skip(-10)} style={styles.skipBtn}>
+                                <Ionicons name="play-back" size={20} color={theme.secondaryText} />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity onPress={handlePlayPause} style={[styles.playBtn, { backgroundColor: theme.primary }]}>
+                                {isLoading ? (
+                                    <ActivityIndicator color="#fff" size="small" />
+                                ) : (
+                                    <Ionicons
+                                        name={isPlaying ? "pause" : "play"}
+                                        size={28}
+                                        color="#fff"
+                                        style={!isPlaying ? { marginLeft: 3 } : null}
+                                    />
+                                )}
+                            </TouchableOpacity>
+
+                            <TouchableOpacity onPress={() => skip(10)} style={styles.skipBtn}>
+                                <Ionicons name="play-forward" size={20} color={theme.secondaryText} />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity onPress={nextTrack} style={styles.skipBtn}>
+                                <Ionicons name="play-skip-forward" size={24} color={theme.text} />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
             </View>
 
@@ -116,9 +131,12 @@ export const MiniPlayer: React.FC = () => {
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
                         <View style={styles.modalHeader}>
-                            <Text style={[styles.modalTitle, { color: theme.text }]}>All Audio Tracks</Text>
-                            <TouchableOpacity onPress={() => setShowTrackList(false)}>
-                                <Ionicons name="close" size={28} color={theme.text} />
+                            <View>
+                                <Text style={[styles.modalTitle, { color: theme.text }]}>ደርሶች</Text>
+                                <Text style={[styles.modalSubTitle, { color: theme.secondaryText }]}>{audioFiles.length} ፋይሎች</Text>
+                            </View>
+                            <TouchableOpacity onPress={() => setShowTrackList(false)} style={[styles.closeBtn, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                                <Ionicons name="close" size={24} color={theme.text} />
                             </TouchableOpacity>
                         </View>
                         <FlatList
@@ -128,21 +146,40 @@ export const MiniPlayer: React.FC = () => {
                                 <TouchableOpacity
                                     style={[
                                         styles.trackItem,
-                                        { backgroundColor: item.url === currentUri ? theme.tint : 'transparent' }
+                                        {
+                                            backgroundColor: item.url === currentUri ? theme.primary + '15' : theme.surface,
+                                            borderColor: item.url === currentUri ? theme.primary + '30' : theme.border
+                                        }
                                     ]}
                                     onPress={() => {
                                         playSound(item.url, item.name, undefined, item.id);
                                         setShowTrackList(false);
                                     }}
                                 >
-                                    <Text style={[
-                                        styles.trackName,
-                                        { color: item.url === currentUri ? (colorScheme === 'dark' ? '#000' : '#fff') : theme.text }
-                                    ]}>
-                                        {item.name}
-                                    </Text>
+                                    <View style={styles.trackInfo}>
+                                        <Ionicons
+                                            name={item.url === currentUri ? "volume-medium" : "musical-note-outline"}
+                                            size={20}
+                                            color={item.url === currentUri ? theme.primary : theme.icon}
+                                            style={styles.trackIcon}
+                                        />
+                                        <Text style={[
+                                            styles.trackName,
+                                            {
+                                                color: item.url === currentUri ? theme.primary : theme.text,
+                                                fontWeight: item.url === currentUri ? '700' : '500'
+                                            }
+                                        ]} numberOfLines={1}>
+                                            {item.name}
+                                        </Text>
+                                    </View>
+                                    {item.url === currentUri && (
+                                        <Ionicons name="checkmark-circle" size={20} color={theme.primary} />
+                                    )}
                                 </TouchableOpacity>
                             )}
+                            contentContainerStyle={styles.modalList}
+                            showsVerticalScrollIndicator={false}
                         />
                     </View>
                 </View>
@@ -157,67 +194,90 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: '#007AFF',
-        padding: 15,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        elevation: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
+        paddingBottom: Platform.OS === 'ios' ? 24 : 12,
+        borderTopWidth: 1,
+        borderTopLeftRadius: Radius.xxl,
+        borderTopRightRadius: Radius.xxl,
+    },
+    content: {
+        padding: Spacing.md,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 10,
+        marginBottom: Spacing.xs,
+    },
+    infoContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+        marginRight: Spacing.md,
+    },
+    titleIcon: {
+        marginRight: Spacing.sm,
     },
     title: {
-        color: '#fff',
         fontSize: 15,
-        fontWeight: 'bold',
-        flex: 1,
-        marginRight: 10,
+        fontWeight: '700',
+        letterSpacing: -0.2,
     },
     headerButtons: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
+        gap: Spacing.sm,
     },
     iconBtn: {
-        width: 40,
-        height: 40,
+        width: 36,
+        height: 36,
         alignItems: 'center',
         justifyContent: 'center',
     },
     speedBtn: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 4,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: Radius.sm,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.3)',
     },
     speedText: {
         fontSize: 12,
-        fontWeight: 'bold',
-    },
-    playBtn: {
-        width: 44,
-        height: 44,
-        alignItems: 'center',
-        justifyContent: 'center',
+        fontWeight: '700',
     },
     controlsRow: {
+        marginTop: -Spacing.xs,
+    },
+    timeRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: Spacing.sm,
+    },
+    timeText: {
+        fontSize: 11,
+        fontWeight: '600',
+        fontVariant: ['tabular-nums'],
+    },
+    mainControls: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
+        gap: Spacing.md,
+    },
+    playBtn: {
+        width: 56,
+        height: 56,
+        borderRadius: Radius.full,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 6,
     },
     slider: {
-        flex: 1,
-        height: 40,
-        marginHorizontal: 10,
+        width: '100%',
+        height: 30,
+        marginVertical: Spacing.xs,
     },
     skipBtn: {
         width: 44,
@@ -227,31 +287,61 @@ const styles = StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'rgba(0,0,0,0.6)',
         justifyContent: 'flex-end',
     },
     modalContent: {
-        height: '70%',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        padding: 20,
+        height: '80%',
+        borderTopLeftRadius: Radius.xxl,
+        borderTopRightRadius: Radius.xxl,
+        padding: Spacing.lg,
     },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: Spacing.xl,
     },
     modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: 24,
+        fontWeight: '800',
+        letterSpacing: -0.5,
+    },
+    modalSubTitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        marginTop: 2,
+    },
+    closeBtn: {
+        width: 44,
+        height: 44,
+        borderRadius: Radius.full,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+    },
+    modalList: {
+        paddingBottom: Spacing.xl,
     },
     trackItem: {
-        padding: 15,
-        borderRadius: 10,
-        marginBottom: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: Spacing.md,
+        borderRadius: Radius.lg,
+        marginBottom: Spacing.sm,
+        borderWidth: 1,
+    },
+    trackInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    trackIcon: {
+        marginRight: Spacing.md,
     },
     trackName: {
         fontSize: 16,
+        flex: 1,
     },
 });

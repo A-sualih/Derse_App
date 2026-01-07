@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme';
+import { Colors, Radius, Shadows, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useFileDownloader } from '@/src/hooks/useFileDownloader';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,7 +47,6 @@ export const FileListItem: React.FC<FileListItemProps> = ({
                 return;
             }
 
-            // Navigate to In-App PDF Viewer
             router.push({
                 pathname: '/pdf-viewer',
                 params: {
@@ -65,7 +64,6 @@ export const FileListItem: React.FC<FileListItemProps> = ({
         if (isCurrent && isPlaying && onPause) {
             onPause();
         } else if (onPlay) {
-            // Pass the title manually using file.name and id
             onPlay(localUri, file.name, undefined, file.id);
         }
     };
@@ -81,61 +79,68 @@ export const FileListItem: React.FC<FileListItemProps> = ({
         if (loading) {
             return (
                 <View style={styles.actionContainer}>
-                    <ActivityIndicator size="small" color={theme.tint} />
+                    <ActivityIndicator size="small" color={theme.primary} />
                 </View>
             );
         }
 
         if (!downloaded) {
             return (
-                <TouchableOpacity onPress={download} style={styles.downloadButton}>
-                    <Ionicons name="cloud-download-outline" size={24} color={theme.tint} />
+                <TouchableOpacity onPress={download} style={[styles.downloadButton, { backgroundColor: theme.primary + '10' }]}>
+                    <Ionicons name="cloud-download" size={20} color={theme.primary} />
                 </TouchableOpacity>
             );
         }
 
-        // File is downloaded
         return (
             <View style={styles.actions}>
                 {file.type === 'audio' ? (
-                    <TouchableOpacity onPress={handleAudioPress} style={styles.actionButton}>
+                    <TouchableOpacity onPress={handleAudioPress} style={styles.playIconBtn}>
                         {isAudioLoading && isCurrent ? (
-                            <ActivityIndicator size="small" color={theme.tint} />
+                            <ActivityIndicator size="small" color={theme.primary} />
                         ) : (
                             <Ionicons
                                 name={isCurrent && isPlaying ? "pause-circle" : "play-circle"}
-                                size={40}
-                                color={theme.tint}
+                                size={44}
+                                color={theme.primary}
                             />
                         )}
                     </TouchableOpacity>
                 ) : (
-                    <TouchableOpacity onPress={handleOpenPdf} style={styles.actionButton}>
-                        <Ionicons name="document-text-outline" size={32} color={theme.tint} />
+                    <TouchableOpacity onPress={handleOpenPdf} style={styles.pdfIconBtn}>
+                        <Ionicons name="document-text" size={32} color={theme.primary} />
                     </TouchableOpacity>
                 )}
 
-                <TouchableOpacity onPress={remove} style={[styles.actionButton, { marginLeft: 15 }]}>
-                    <Ionicons name="trash-outline" size={24} color="#FF3B30" />
+                <TouchableOpacity onPress={remove} style={styles.deleteBtn}>
+                    <Ionicons name="close-circle" size={24} color={theme.error + '90'} />
                 </TouchableOpacity>
             </View>
         );
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background, borderBottomColor: colorScheme === 'dark' ? '#333' : '#f0f0f0' }]}>
+        <View style={[
+            styles.container,
+            {
+                backgroundColor: isCurrent ? theme.primary + '05' : theme.surface,
+                borderColor: isCurrent ? theme.primary + '30' : theme.border
+            },
+            Shadows.sm
+        ]}>
             <View style={styles.mainRow}>
                 <View style={styles.info}>
-                    <Ionicons
-                        name={file.type === 'audio' ? 'musical-note' : 'document'}
-                        size={24}
-                        color={theme.icon}
-                        style={styles.icon}
-                    />
+                    <View style={[styles.typeIconContainer, { backgroundColor: theme.primary + '10' }]}>
+                        <Ionicons
+                            name={file.type === 'audio' ? 'headset' : 'document-text'}
+                            size={20}
+                            color={theme.primary}
+                        />
+                    </View>
                     <View style={{ flex: 1 }}>
                         <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>{file.name}</Text>
-                        <Text style={[styles.status, { color: theme.icon + '80' }]}>
-                            {downloaded ? 'Downloaded' : 'Not downloaded'}
+                        <Text style={[styles.status, { color: theme.secondaryText }]}>
+                            {downloaded ? 'ወርዷል' : 'አልወረደም'}
                         </Text>
                     </View>
                 </View>
@@ -143,45 +148,42 @@ export const FileListItem: React.FC<FileListItemProps> = ({
             </View>
 
             {isCurrent && file.type === 'audio' && (
-                <View style={styles.progressContainer}>
-                    <View style={styles.controlsRow}>
-                        <TouchableOpacity
-                            onPress={() => {
-                                const speeds = [1.0, 1.25, 1.5, 1.75, 2.0];
-                                const nextIndex = (speeds.indexOf(playbackSpeed) + 1) % speeds.length;
-                                onSetSpeed?.(speeds[nextIndex]);
-                            }}
-                            style={styles.speedToggle}
-                        >
-                            <Text style={styles.speedText}>{playbackSpeed}x</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity onPress={() => onSeek && onSeek(Math.max(0, position - 10000))} style={styles.controlBtn}>
-                            <Ionicons name="refresh-outline" size={24} color="#007AFF" />
-                            <Text style={styles.controlText}>-10s</Text>
-                        </TouchableOpacity>
-
-                        <View style={{ flex: 1 }}>
-                            <Slider
-                                style={styles.slider}
-                                minimumValue={0}
-                                maximumValue={duration}
-                                value={position}
-                                onSlidingComplete={onSeek}
-                                minimumTrackTintColor="#007AFF"
-                                maximumTrackTintColor="#D1D1D1"
-                                thumbTintColor="#007AFF"
-                            />
-                        </View>
-
-                        <TouchableOpacity onPress={() => onSeek && onSeek(Math.min(duration, position + 10000))} style={styles.controlBtn}>
-                            <Ionicons name="refresh-outline" size={24} color="#007AFF" style={{ transform: [{ scaleX: -1 }] }} />
-                            <Text style={styles.controlText}>+10s</Text>
-                        </TouchableOpacity>
+                <View style={styles.innerPlayer}>
+                    <View style={styles.innerSliderRow}>
+                        <Slider
+                            style={styles.slider}
+                            minimumValue={0}
+                            maximumValue={duration}
+                            value={position}
+                            onSlidingComplete={onSeek}
+                            minimumTrackTintColor={theme.primary}
+                            maximumTrackTintColor={theme.border}
+                            thumbTintColor={theme.primary}
+                        />
                     </View>
-                    <View style={styles.timeLabels}>
-                        <Text style={styles.timeText}>{formatTime(position)}</Text>
-                        <Text style={styles.timeText}>{formatTime(duration)}</Text>
+                    <View style={styles.innerTimeRow}>
+                        <Text style={[styles.innerTimeText, { color: theme.secondaryText }]}>{formatTime(position)}</Text>
+                        <View style={styles.innerControls}>
+                            <TouchableOpacity onPress={() => onSeek && onSeek(Math.max(0, position - 10000))} style={styles.innerControlBtn}>
+                                <Ionicons name="refresh" size={20} color={theme.secondaryText} />
+                                <Text style={[styles.innerControlText, { color: theme.secondaryText }]}>-10s</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    const speeds = [1.0, 1.25, 1.5, 1.75, 2.0];
+                                    const nextIndex = (speeds.indexOf(playbackSpeed) + 1) % speeds.length;
+                                    onSetSpeed?.(speeds[nextIndex]);
+                                }}
+                                style={[styles.innerSpeedBtn, { backgroundColor: theme.primary + '15', borderColor: theme.primary + '30' }]}
+                            >
+                                <Text style={[styles.innerSpeedText, { color: theme.primary }]}>{playbackSpeed}x</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => onSeek && onSeek(Math.min(duration, position + 10000))} style={styles.innerControlBtn}>
+                                <Ionicons name="refresh" size={20} color={theme.secondaryText} style={{ transform: [{ scaleX: -1 }] }} />
+                                <Text style={[styles.innerControlText, { color: theme.secondaryText }]}>+10s</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <Text style={[styles.innerTimeText, { color: theme.secondaryText }]}>{formatTime(duration)}</Text>
                     </View>
                 </View>
             )}
@@ -191,96 +193,115 @@ export const FileListItem: React.FC<FileListItemProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-        paddingVertical: 8,
+        marginHorizontal: Spacing.md,
+        marginVertical: Spacing.xs,
+        borderRadius: Radius.lg,
+        borderWidth: 1,
+        paddingVertical: Spacing.xs,
     },
     mainRow: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingHorizontal: Spacing.md,
+        paddingVertical: Spacing.sm,
     },
     info: {
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
     },
-    icon: {
-        marginRight: 12,
+    typeIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: Radius.md,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: Spacing.md,
     },
     name: {
-        fontSize: 16,
-        fontWeight: '500',
-        color: '#333',
+        fontSize: 15,
+        fontWeight: '700',
+        letterSpacing: -0.2,
     },
     status: {
         fontSize: 12,
-        color: '#888',
+        fontWeight: '500',
         marginTop: 2,
     },
     actionContainer: {
-        width: 40,
+        width: 44,
         alignItems: 'center',
     },
     downloadButton: {
-        padding: 8,
+        width: 44,
+        height: 44,
+        borderRadius: Radius.full,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     actions: {
         flexDirection: 'row',
         alignItems: 'center',
+        gap: Spacing.sm,
     },
-    actionButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    progressContainer: {
-        paddingHorizontal: 16,
-        paddingBottom: 8,
-    },
-    
-    controlsRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    controlBtn: {
-        alignItems: 'center',
+    playIconBtn: {
         justifyContent: 'center',
-        paddingHorizontal: 5,
+        alignItems: 'center',
     },
-    controlText: {
-        fontSize: 10,
-        color: '#007AFF',
-        marginTop: -2,
+    pdfIconBtn: {
+        width: 44,
+        height: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    speedToggle: {
-        backgroundColor: '#007AFF10',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 4,
-        borderWidth: 1,
-        borderColor: '#007AFF30',
+    deleteBtn: {
+        padding: 4,
     },
-    speedText: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: '#007AFF',
+    innerPlayer: {
+        paddingHorizontal: Spacing.md,
+        paddingBottom: Spacing.sm,
+    },
+    innerSliderRow: {
+        height: 30,
+        justifyContent: 'center',
     },
     slider: {
         width: '100%',
-        height: 40,
+        height: 30,
     },
-    timeLabels: {
+    innerTimeRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: -8,
-        paddingHorizontal: 40,
+        alignItems: 'center',
     },
-    timeText: {
-        fontSize: 12,
-        color: '#666',
+    innerTimeText: {
+        fontSize: 11,
+        fontWeight: '600',
+        fontVariant: ['tabular-nums'],
+        minWidth: 40,
+    },
+    innerControls: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Spacing.lg,
+    },
+    innerControlBtn: {
+        alignItems: 'center',
+    },
+    innerControlText: {
+        fontSize: 9,
+        fontWeight: '700',
+        marginTop: -2,
+    },
+    innerSpeedBtn: {
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: Radius.sm,
+        borderWidth: 1,
+    },
+    innerSpeedText: {
+        fontSize: 11,
+        fontWeight: '800',
     },
 });
