@@ -774,7 +774,7 @@ export const IRSHAD_FILES: DriveFile[] = [
 export const CATEGORIES: Category[] = [
     {
         id: 'hamuwiya',
-        title: 'الحموية لابን تيمية',
+        title: ' አል ሀመውያ ደርስ',
         description: 'በ ሸህ አቡ ኒብራስ ሙስጠፋ የቀረበ',
         files: HAMUWIYA_FILES,
     },
