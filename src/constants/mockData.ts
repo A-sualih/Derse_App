@@ -771,6 +771,256 @@ export const IRSHAD_FILES: DriveFile[] = [
     },
 ];
 
+export const TUHFATU_SENIYA_FILES: DriveFile[] = [
+    {
+        id: 'tuhfatu-pdf-0',
+        name: 'ቱህፈቱ-ሰንያ.pdf',
+        type: 'pdf',
+        url: getDirectLink('1WxA5QEc_RW9Yhtz91vwNWmTSQiFEm92l'),
+    },
+    {
+        id: 'tuhfatu-audio-1',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 1',
+        type: 'audio',
+        url: getDirectLink('1emd6iNTtlE8XhjtHWVc-m7IHr_4hdkjd'),
+    },
+    {
+        id: 'tuhfatu-audio-2',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 2',
+        type: 'audio',
+        url: getDirectLink('1UtqIo86o_20Qp-s7E19MbsCogr2LegC3'),
+    },
+    {
+        id: 'tuhfatu-audio-3',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 3',
+        type: 'audio',
+        url: getDirectLink('1z3Cwjd9POxMzPjr0bs8oW-kVTC_Mr5G2'),
+    },
+    {
+        id: 'tuhfatu-audio-4',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 4',
+        type: 'audio',
+        url: getDirectLink('1ZHgwXrcyEUVkNRGC0lOybXJJTQEJkKib'),
+    },
+    {
+        id: 'tuhfatu-audio-5',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 5',
+        type: 'audio',
+        url: getDirectLink('1AC-jhaMZDKngvMmjD8V9B9PtbHmsFBJN'),
+    },
+    {
+        id: 'tuhfatu-audio-6',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 6',
+        type: 'audio',
+        url: getDirectLink('1AFldNkd_Z3e9ZYufDbrfpHy2soHnnMKJ'),
+    },
+    {
+        id: 'tuhfatu-audio-7',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 7',
+        type: 'audio',
+        url: getDirectLink('1oJKfpyCcN05Gl93aZ-JilBrFqTnBWSig'),
+    },
+    {
+        id: 'tuhfatu-audio-8',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 8',
+        type: 'audio',
+        url: getDirectLink('1uObqeXjumPrDozcSzeWBIa26Go4xVRw8'),
+    },
+    {
+        id: 'tuhfatu-audio-9',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 9',
+        type: 'audio',
+        url: getDirectLink('1B806MWJHTsMNy-e60umYam_-emb8xc26'),
+    },
+    {
+        id: 'tuhfatu-audio-10',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 10',
+        type: 'audio',
+        url: getDirectLink('1iHmNpjx6IfLTi73UeabpcQww84jFOaD-'),
+    },
+    {
+        id: 'tuhfatu-audio-11',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 11',
+        type: 'audio',
+        url: getDirectLink('1ivub6gX8VjPi76IhRaAphhi6CFsZevtD'),
+    },
+    {
+        id: 'tuhfatu-audio-12',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 12',
+        type: 'audio',
+        url: getDirectLink('1R7HUR4Wjjbz4V7NN1QpfUttkqSohl56V'),
+    },
+    {
+        id: 'tuhfatu-audio-13',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 13',
+        type: 'audio',
+        url: getDirectLink('1-XRP8fXtAPJNoJrOxfFz9fbnLiF1Pj7t'),
+    },
+    {
+        id: 'tuhfatu-audio-14',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 14',
+        type: 'audio',
+        url: getDirectLink('1JlWqDfKOFeSm0p-DDXy5R2b6jxhbV2ur'),
+    },
+    {
+        id: 'tuhfatu-audio-15',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 15',
+        type: 'audio',
+        url: getDirectLink('11mC_O9sZ2CRe0UC95F-LrLf8TXt2MaZB'),
+    },
+    {
+        id: 'tuhfatu-audio-16',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 16',
+        type: 'audio',
+        url: getDirectLink('117nZqR1SjlqG_epYFCHCIMgyvgVYOPOH'),
+    },
+    {
+        id: 'tuhfatu-audio-17',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 17',
+        type: 'audio',
+        url: getDirectLink('1YFXGMDZTGg4-ZPKExpv6lIOLl44UizeN'),
+    },
+    {
+        id: 'tuhfatu-audio-18',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 18',
+        type: 'audio',
+        url: getDirectLink('1ujgmWb05Jd9WEdbegjkEEEtCftPmPXAc'),
+    },
+    {
+        id: 'tuhfatu-audio-19',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 19',
+        type: 'audio',
+        url: getDirectLink('1mYX63_5wzJNcNwE2_EQGvKzFzf6SD6nx'),
+    },
+    {
+        id: 'tuhfatu-audio-20',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 20',
+        type: 'audio',
+        url: getDirectLink('1-tJaXr95zqUSiZGk-_YqBF9qnrVjUu27'),
+    },
+    {
+        id: 'tuhfatu-audio-21',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 21',
+        type: 'audio',
+        url: getDirectLink('1-Qloj-LrTKnLhkvrDOkqJuy13x2ea5Et'),
+    },
+    {
+        id: 'tuhfatu-audio-22',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 22',
+        type: 'audio',
+        url: getDirectLink('1J5CVj5VzVu5CcAi_ZSZjQO1_txfXSgmf'),
+    },
+    {
+        id: 'tuhfatu-audio-23',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 23',
+        type: 'audio',
+        url: getDirectLink('1F2UeUURfLpxANSJqTIGGJ7yqL6CObPGv'),
+    },
+    {
+        id: 'tuhfatu-audio-24',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 24',
+        type: 'audio',
+        url: getDirectLink('1lje9G_ekhE1XOpo2jm7JivBI55_vKYJ1'),
+    },
+    {
+        id: 'tuhfatu-audio-25',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 25',
+        type: 'audio',
+        url: getDirectLink('1vZcNO9gOCvLAPSKdbn7UmKyq9CeHNjsY'),
+    },
+    {
+        id: 'tuhfatu-audio-26',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 26',
+        type: 'audio',
+        url: getDirectLink('13ZXnXkF9SuZi7HVC_HvwlwL47MB3-bmH'),
+    },
+    {
+        id: 'tuhfatu-audio-27',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 27',
+        type: 'audio',
+        url: getDirectLink('1AwExUkfYUfSxpA5iFjx7w1Mn3ZeNu9Ow'),
+    },
+    {
+        id: 'tuhfatu-audio-28',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 28',
+        type: 'audio',
+        url: getDirectLink('1ubMqhPG3L9_SWR2pzwrC7JApAeJwl7Xb'),
+    },
+    {
+        id: 'tuhfatu-audio-29',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 29',
+        type: 'audio',
+        url: getDirectLink('1Pylf0xlQXh_avKxU34Rck72yLrBzrjcL'),
+    },
+    {
+        id: 'tuhfatu-audio-30',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 30',
+        type: 'audio',
+        url: getDirectLink('1YleaqH-nZI9XYsR-ZUcpmBKCuk0chddR'),
+    },
+    {
+        id: 'tuhfatu-audio-31',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 31',
+        type: 'audio',
+        url: getDirectLink('1oboMEa6lbmZqTGFwnymcJo1kZKrR2vfI'),
+    },
+    {
+        id: 'tuhfatu-audio-32',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 32',
+        type: 'audio',
+        url: getDirectLink('1t0EVKibzswm-WCbY0fbHzUARrJtf2ycN'),
+    },
+    {
+        id: 'tuhfatu-audio-33',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 33',
+        type: 'audio',
+        url: getDirectLink('1F5ZRdTdMtEeQqEoaAofb5WK5K6taF-vi'),
+    },
+    {
+        id: 'tuhfatu-audio-34',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 34',
+        type: 'audio',
+        url: getDirectLink('1ZOyIetB5pBgwbV72Mp8XLQyVSdF6tXGr'),
+    },
+    {
+        id: 'tuhfatu-audio-35',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 35',
+        type: 'audio',
+        url: getDirectLink('1s8YRZSc0ThHHjTcyGtx2aomJ2qWzb1c5'),
+    },
+    {
+        id: 'tuhfatu-audio-36',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 36',
+        type: 'audio',
+        url: getDirectLink('1u4UZzHN_MvgsxNRJzsufycZF24E-5nSS'),
+    },
+    {
+        id: 'tuhfatu-audio-37',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 37',
+        type: 'audio',
+        url: getDirectLink('1OCc-b011cKaYJ-7hMDDw4zaomA4mqmVj'),
+    },
+    {
+        id: 'tuhfatu-audio-38',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 38',
+        type: 'audio',
+        url: getDirectLink('1tM73aUWH7hmxClT1IQZpA0rkFJ1vvGMJ'),
+    },
+    {
+        id: 'tuhfatu-audio-39',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 39',
+        type: 'audio',
+        url: getDirectLink('1EedNUywzvAqorb8nTxD1X37G1cqkeUof'),
+    },
+    {
+        id: 'tuhfatu-audio-40',
+        name: 'ቱህፈቱ-ሰንያ ደርስ 40',
+        type: 'audio',
+        url: getDirectLink('1vspa5hDbSfMlYwb-no_WBiVuLdISF0Lh'),
+    },
+];
+
+
 export const CATEGORIES: Category[] = [
     {
         id: 'hamuwiya',
@@ -783,6 +1033,12 @@ export const CATEGORIES: Category[] = [
         title: 'الإرشاد إلى صحيح الاعتقاد',
         description: 'በ ሸህ አቡ ኒብራስ ሙስጠፋ የቀረበ',
         files: IRSHAD_FILES,
+    },
+    {
+        id: 'tuhfatu_seniya',
+        title: 'ቱህፈቱ-ሰንያ', // Tuhfatu-Seniyya
+        description: 'በ ሸህ አቡ ኒብራስ ሙስጠፋ የቀረበ',
+        files: TUHFATU_SENIYA_FILES,
     },
     {
         id: 'future',

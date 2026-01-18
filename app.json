@@ -13,12 +13,16 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/7f99365d-c491-4404-ad4a-d2ec093b58ee"
+      "url": "https://u.expo.dev/dcdf9132-307a-4a5f-9de5-0bb90abc964c"
     },
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": [
+          "audio",
+          "audio",
+          "audio",
+          "audio",
           "audio",
           "audio",
           "audio",
@@ -39,6 +43,11 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.sualih.abunibras.ders",
       "permissions": [
+        "WAKE_LOCK",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_AUDIO",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
         "WAKE_LOCK",
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_AUDIO",
