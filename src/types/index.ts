@@ -3,6 +3,7 @@ export interface DriveFile {
     name: string;
     type: 'audio' | 'pdf';
     url: string;
+    extension?: string;
 }
 
 export interface FileStatus {

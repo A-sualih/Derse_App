@@ -37,7 +37,13 @@ export const FileListItem: React.FC<FileListItemProps> = ({
 }) => {
     const colorScheme = useColorScheme() ?? 'light';
     const theme = Colors[colorScheme];
-    const { downloaded, loading, download, remove, localUri } = useFileDownloader(file.name, file.url);
+    const getSafeFilename = (file: DriveFile) => {
+        if (file.type === 'pdf') return `${file.id}.pdf`;
+        const ext = file.extension || 'mp3';
+        return `${file.id}.${ext}`;
+    };
+
+    const { downloaded, loading, download, remove, localUri } = useFileDownloader(getSafeFilename(file), file.url);
     const router = useRouter();
 
     const handleOpenPdf = async () => {
@@ -69,7 +75,8 @@ export const FileListItem: React.FC<FileListItemProps> = ({
     };
 
     const formatTime = (millis: number) => {
-        const totalSeconds = millis / 1000;
+        if (!millis || isNaN(millis)) return '0:00';
+        const totalSeconds = Math.floor(millis / 1000);
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = Math.floor(totalSeconds % 60);
         return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;

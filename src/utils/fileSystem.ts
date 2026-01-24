@@ -80,12 +80,26 @@ export const downloadFile = async (url: string, filename: string): Promise<strin
     try {
         const downloadRes = await FileSystem.downloadAsync(url, fileUri);
         console.log('Download finished:', downloadRes);
+
         if (downloadRes.status !== 200) {
             throw new Error(`Download failed with status ${downloadRes.status}`);
         }
+
+        // Validate file size
+        const info = await FileSystem.getInfoAsync(fileUri);
+        if (info.exists && info.size < 5120) { // 5KB threshold
+            await FileSystem.deleteAsync(fileUri);
+            throw new Error('Downloaded file too small (likely invalid HTML/Error page)');
+        }
+
         return downloadRes.uri;
     } catch (error) {
         console.error('FileSystem download error:', error);
+        // Clean up on error
+        const info = await FileSystem.getInfoAsync(fileUri);
+        if (info.exists) {
+            await FileSystem.deleteAsync(fileUri, { idempotent: true });
+        }
         throw error;
     }
 };

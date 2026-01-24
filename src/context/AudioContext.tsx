@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
 import React, { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Platform } from 'react-native';
 import { DRIVE_FILES } from '../constants/mockData';
@@ -27,132 +27,90 @@ interface AudioContextType {
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
 
 export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const [sound, setSound] = useState<Audio.Sound | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [currentUri, setCurrentUri] = useState<string | null>(null);
     const [currentTitle, setCurrentTitle] = useState<string | null>(null);
     const [currentFileId, setCurrentFileId] = useState<string | null>(null);
-    const [localIsPlaying, setLocalIsPlaying] = useState(false);
-    const player = useAudioPlayer(currentUri);
-    const status = useAudioPlayerStatus(player);
-    const [isLoading, setIsLoading] = useState(false);
+    const [position, setPosition] = useState(0);
+    const [duration, setDuration] = useState(0);
     const [playbackSpeed, setPlaybackSpeedState] = useState(1.0);
-    const positionSaveInterval = useRef<any>(null);
+
+    // Queue management
+    const [currentQueue, setCurrentQueue] = useState<DriveFile[]>(DRIVE_FILES);
     const pendingSeekPosition = useRef<number | null>(null);
-    const shouldAutoPlay = useRef(false);
-
-    // Sync status back to our context-friendly state
-    const isPlaying = localIsPlaying;
-    const position = isFinite(status.currentTime) ? status.currentTime * 1000 : 0;
-    const duration = isFinite(status.duration) ? status.duration * 1000 : 0;
-
-    // Sync localIsPlaying with native status, but skip while loading or during transitions
-    useEffect(() => {
-        if (!isLoading) {
-            setLocalIsPlaying(status.playing);
-        }
-    }, [status.playing, isLoading]);
 
     useEffect(() => {
-        // Configure audio mode for background playback
+        // Configure audio mode
         const setupAudio = async () => {
             try {
-                await setAudioModeAsync({
-                    playsInSilentMode: true,
-                    shouldPlayInBackground: true,
-                    interruptionMode: 'duckOthers' as any,
+                await Audio.setAudioModeAsync({
+                    allowsRecordingIOS: false,
+                    staysActiveInBackground: true,
+                    playsInSilentModeIOS: true,
+                    shouldDuckAndroid: true,
+                    interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+                    interruptionModeIOS: InterruptionModeIOS.DuckOthers,
+                    playThroughEarpieceAndroid: false
                 });
-                console.log('Audio mode configured for background playback');
+                console.log('Audio mode configured (expo-av)');
             } catch (error) {
                 console.error('Error setting audio mode:', error);
             }
         };
         setupAudio();
-    }, []);
 
-    // Auto-play and restore position when a new track is loaded
-    useEffect(() => {
-        if (!currentUri || !shouldAutoPlay.current) return;
+        // Load saved speed
+        AsyncStorage.getItem('audio_playback_speed').then(savedSpeed => {
+            if (savedSpeed) setPlaybackSpeedState(parseFloat(savedSpeed));
+        });
 
-        // Check if we have a pending position to restore
-        if (pendingSeekPosition.current !== null && status.duration > 0) {
-            const posToRestore = pendingSeekPosition.current;
-            pendingSeekPosition.current = null;
-
-            console.log('Restoring position:', posToRestore / 1000, 'seconds');
-            player.seekTo(posToRestore / 1000)
-                .then(() => {
-                    player.setPlaybackRate(playbackSpeed);
-                    player.play();
-                    shouldAutoPlay.current = false;
-                    setIsLoading(false);
-                })
-                .catch((error) => {
-                    console.error('Error restoring position:', error);
-                    player.setPlaybackRate(playbackSpeed);
-                    player.play();
-                    shouldAutoPlay.current = false;
-                    setIsLoading(false);
-                });
-        } else if (status.duration > 0) {
-            // No saved position, just play
-            player.setPlaybackRate(playbackSpeed);
-            player.play();
-            shouldAutoPlay.current = false;
-            setIsLoading(false);
-        }
-    }, [currentUri, status.duration, player, playbackSpeed]);
-
-    const getPersistenceKey = (uri: string) => `audio_pos_${encodeURIComponent(uri)} `;
-
-    // Handle completion
-    useEffect(() => {
-        // useAudioPlayerStatus doesn't have didJustFinish like expo-av, 
-        // we check if currentTime is >= duration and not playing
-        if (status.currentTime >= status.duration && status.duration > 0 && !status.playing) {
-            player.seekTo(0).catch(err => console.error('Seek to start error:', err));
-            if (currentUri) {
-                AsyncStorage.removeItem(getPersistenceKey(currentUri));
-            }
-        }
-    }, [status.currentTime, status.duration, status.playing, currentUri, player]);
-
-    // Save position periodically when playing
-    useEffect(() => {
-        if (isPlaying && currentUri) {
-            positionSaveInterval.current = setInterval(() => {
-                AsyncStorage.setItem(getPersistenceKey(currentUri), position.toString());
-            }, 1000); // Save every 1 second for more precision
-        } else {
-            if (positionSaveInterval.current) {
-                clearInterval(positionSaveInterval.current);
-            }
-            // Save one last time on pause
-            if (currentUri && position > 0) {
-                AsyncStorage.setItem(getPersistenceKey(currentUri), position.toString());
-            }
-        }
         return () => {
-            if (positionSaveInterval.current) clearInterval(positionSaveInterval.current);
+            if (sound) {
+                sound.unloadAsync();
+            }
         };
-    }, [isPlaying, currentUri, position]);
-
-    const [currentQueue, setCurrentQueue] = useState<DriveFile[]>(DRIVE_FILES);
-
-    useEffect(() => {
-        const loadSpeed = async () => {
-            try {
-                const savedSpeed = await AsyncStorage.getItem('audio_playback_speed');
-                if (savedSpeed) {
-                    setPlaybackSpeedState(parseFloat(savedSpeed));
-                }
-            } catch (e) { }
-        };
-        loadSpeed();
     }, []);
+
+    const getPersistenceKey = (uri: string) => `audio_pos_${encodeURIComponent(uri)}`;
+
+    const onPlaybackStatusUpdate = async (status: any) => {
+        if (!status.isLoaded) {
+            if (status.error) {
+                console.error(`Encountered a fatal error during playback: ${status.error}`);
+            }
+            return;
+        }
+
+        setPosition(status.positionMillis);
+        setDuration(status.durationMillis || 0);
+        setIsPlaying(status.isPlaying);
+        setIsLoading(status.isBuffering);
+
+        // Auto-save position every ~1s (expo-av default update is 500ms)
+        if (status.isPlaying && currentUri) {
+            // We can throttle this saving if needed, but simple setItem is usually fine.
+            AsyncStorage.setItem(getPersistenceKey(currentUri), status.positionMillis.toString()).catch(() => { });
+        }
+
+        // Handle finite completion
+        if (status.didJustFinish && !status.isLooping) {
+            // Check for next track or just seek to start
+            if (currentUri) {
+                AsyncStorage.removeItem(getPersistenceKey(currentUri)).catch(() => { });
+            }
+            // Optional: Auto-advance could go here
+            // nextTrack(); 
+        }
+    };
 
     const setPlaybackSpeed = async (speed: number) => {
         try {
             setPlaybackSpeedState(speed);
-            player.setPlaybackRate(speed);
+            if (sound) {
+                await sound.setRateAsync(speed, true);
+            }
             await AsyncStorage.setItem('audio_playback_speed', speed.toString());
         } catch (e) {
             console.error('Error setting playback speed:', e);
@@ -161,25 +119,11 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const playSound = async (uri: string, title?: string, queue?: DriveFile[], fileId?: string) => {
         try {
-            if (currentUri === uri) {
-                if (status.playing) {
-                    setLocalIsPlaying(false);
-                    player.pause();
-                } else {
-                    setLocalIsPlaying(true);
-                    player.play();
-                }
-                return;
-            }
-
-            // INSTANT STATE UPDATES
-            setLocalIsPlaying(true);
-            setIsLoading(true);
-
-            // Determine Title and ID INSTANTLY
+            // Identifying Queue / Title logic
             let foundTitle = title;
             let foundId = fileId;
             const searchList = queue || currentQueue || DRIVE_FILES;
+            if (queue) setCurrentQueue(queue);
 
             if (!foundTitle || !foundId) {
                 const foundFile = searchList.find(f => f.url === uri || (fileId && f.id === fileId));
@@ -189,76 +133,90 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 }
             }
 
+            // If same file, just toggle play
+            if (currentUri === uri && sound) {
+                const status = await sound.getStatusAsync();
+                if (status.isLoaded) {
+                    if (status.isPlaying) {
+                        await sound.pauseAsync();
+                    } else {
+                        await sound.playAsync();
+                    }
+                    return;
+                }
+            }
+
+            // New Track Loading
+            setIsLoading(true);
+            if (sound) {
+                await sound.unloadAsync();
+                setSound(null);
+            }
+
+            setCurrentUri(uri);
             setCurrentTitle(foundTitle || 'Audio');
             setCurrentFileId(foundId || null);
 
-            if (queue) {
-                setCurrentQueue(queue);
-            }
+            // Restore position logic
+            const savedPos = await AsyncStorage.getItem(getPersistenceKey(uri));
+            const initialPos = savedPos ? parseInt(savedPos, 10) : 0;
 
-            // FIRE AND FORGET PERSISTENCE CHECK (don't await)
-            AsyncStorage.getItem(getPersistenceKey(uri))
-                .then(savedPos => {
-                    if (savedPos) {
-                        pendingSeekPosition.current = parseInt(savedPos, 10);
-                    } else {
-                        pendingSeekPosition.current = null;
-                    }
-                })
-                .catch(e => console.error("Position restore error", e))
-                .finally(() => {
-                    // Finally set the URI to trigger loading
-                    shouldAutoPlay.current = true;
-                    setCurrentUri(uri);
-                });
+            const { sound: newSound } = await Audio.Sound.createAsync(
+                { uri },
+                {
+                    shouldPlay: true,
+                    positionMillis: initialPos,
+                    rate: playbackSpeed,
+                    shouldCorrectPitch: true,
+                    progressUpdateIntervalMillis: 100
+                },
+                onPlaybackStatusUpdate
+            );
+
+            setSound(newSound);
+            setIsLoading(false);
 
         } catch (error: any) {
-            // ... (error handling)
-            console.error('Error playing sound', error);
+            console.error('Error playing sound (expo-av):', error);
             setIsLoading(false);
             if (Platform.OS === 'web' && uri.includes('drive.google.com')) {
                 const message = 'Google Drive audio links cannot stream directly in the browser. Open in new tab?';
-                if (window.confirm(message)) {
-                    Linking.openURL(uri);
-                }
+                if (window.confirm(message)) Linking.openURL(uri);
             } else {
-                Alert.alert('Playback Error', `Error playing audio: ${error.message || error} `);
+                Alert.alert('Playback Error', `Error playing audio: ${error.message || error}`);
             }
         }
     };
 
-    const pauseSound = async () => {
-        setLocalIsPlaying(false);
-        if (player.playing) {
-            player.pause();
-            if (currentUri) {
+    const pauseSound = async (savePosition = true) => {
+        if (sound) {
+            await sound.pauseAsync();
+            if (savePosition && currentUri && position > 0) {
                 AsyncStorage.setItem(getPersistenceKey(currentUri), position.toString());
             }
         }
     };
 
     const seekScroll = async (value: number) => {
-        try {
-            if (!isFinite(value) || value < 0) return;
-            await player.seekTo(value / 1000);
-            if (currentUri) {
-                AsyncStorage.setItem(getPersistenceKey(currentUri), value.toString());
-            }
-        } catch (error) {
-            console.error('Seek error:', error);
+        if (sound) {
+            await sound.setPositionAsync(value);
         }
     };
+
     const skip = async (seconds: number) => {
-        try {
-            const newPosition = position + seconds * 1000;
-            const clampedPosition = Math.max(0, Math.min(newPosition, duration || 0));
-            if (!isFinite(clampedPosition)) return;
-            await player.seekTo(clampedPosition / 1000);
-            if (currentUri) {
-                AsyncStorage.setItem(getPersistenceKey(currentUri), clampedPosition.toString());
+        if (sound) {
+            const status = await sound.getStatusAsync();
+            if (status.isLoaded) {
+                const currentPos = status.positionMillis;
+                const totalDur = status.durationMillis || 0; // Use 0 if unknown
+                const newPos = currentPos + (seconds * 1000);
+
+                // If duration is known (>0), clamp. Else just go to newPos (but at least 0).
+                const clamped = Math.max(0, totalDur > 0 ? Math.min(newPos, totalDur) : newPos);
+
+                console.log('[AudioContext] Skipping:', { currentPos, totalDur, newPos, clamped, seconds });
+                await sound.setPositionAsync(clamped);
             }
-        } catch (error) {
-            console.error('Skip error:', error);
         }
     };
 
@@ -277,9 +235,25 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const nextIndex = (currentIndex + 1) % audioFiles.length;
         const nextFile = audioFiles[nextIndex];
 
-        // Check if file is downloaded to use local URI
-        const isDownloaded = await checkFileExists(nextFile.name);
-        const nextUri = isDownloaded ? getLocalUri(nextFile.name) || nextFile.url : nextFile.url;
+        // Handle local vs remote URI
+        const isDownloaded = await checkFileExists(nextFile.name); // Note: checkFileExists still uses name? We should update this later if we use ID logic. 
+        // But for now, we follow existing logic. 
+        // Wait, checkFileExists helper might need update if we changed filenames in FileListItem only.
+        // Actually, downloader uses ID based filenames now. checkFileExists takes a filename.
+        // We need to construct the filename same way as FileListItem.
+        // Let's rely on FileListItem passing correct URI or just check logic.
+        // Re-using same logic as before:
+
+        // Helper to guess filename if we don't have it handy?
+        // Ideally nextTrack should just use the ID derived filename.
+        // Let's simplify: try to just play the URL, if useFileDownloader in FileListItem handled it, maybe good. 
+        // But here we need to know if local exists to play local.
+
+        // For consistent ID filenames:
+        const ext = nextFile.extension || 'mp3';
+        const safeFilename = `${nextFile.id}.${ext}`;
+        const isLocal = await checkFileExists(safeFilename);
+        const nextUri = isLocal ? getLocalUri(safeFilename) || nextFile.url : nextFile.url;
 
         playSound(nextUri, nextFile.name, currentQueue, nextFile.id);
     };
@@ -288,26 +262,21 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const audioFiles = currentQueue.filter(file => file.type === 'audio');
         if (audioFiles.length === 0) return;
 
-        let currentIndex = -1;
-        if (currentFileId) {
-            currentIndex = audioFiles.findIndex(file => file.id === currentFileId);
-        }
-        if (currentIndex === -1) {
-            currentIndex = audioFiles.findIndex(file => file.url === currentUri || getLocalUri(file.name) === currentUri);
-        }
+        let currentIndex = audioFiles.findIndex(file => file.id === currentFileId);
+        if (currentIndex === -1) currentIndex = 0;
 
         let prevIndex = currentIndex - 1;
         if (prevIndex < 0) prevIndex = audioFiles.length - 1;
 
         const prevFile = audioFiles[prevIndex];
 
-        // Check if file is downloaded to use local URI
-        const isDownloaded = await checkFileExists(prevFile.name);
-        const prevUri = isDownloaded ? getLocalUri(prevFile.name) || prevFile.url : prevFile.url;
+        const ext = prevFile.extension || 'mp3';
+        const safeFilename = `${prevFile.id}.${ext}`;
+        const isLocal = await checkFileExists(safeFilename);
+        const prevUri = isLocal ? getLocalUri(safeFilename) || prevFile.url : prevFile.url;
 
         playSound(prevUri, prevFile.name, currentQueue, prevFile.id);
     };
-
 
     return (
         <AudioContext.Provider value={{

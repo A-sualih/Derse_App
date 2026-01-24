@@ -4,9 +4,9 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '../hooks/use-color-scheme';
+import { MiniPlayer } from '../src/components/MiniPlayer';
 import { AudioProvider } from '../src/context/AudioContext';
 import { ThemeProvider as AppThemeProvider } from '../src/context/ThemeContext';
-
 import { UserProvider } from '../src/context/UserContext';
 
 export const unstable_settings = {
@@ -19,6 +19,7 @@ export default function RootLayout() {
       <AudioProvider>
         <UserProvider>
           <LayoutContent />
+          <MiniPlayer />
         </UserProvider>
       </AudioProvider>
     </AppThemeProvider>

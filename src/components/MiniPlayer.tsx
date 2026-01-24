@@ -81,20 +81,31 @@ export const MiniPlayer: React.FC = () => {
                     <View style={styles.controlsRow}>
                         <View style={styles.timeRow}>
                             <Text style={[styles.timeText, { color: theme.secondaryText }]}>
-                                {Math.floor(position / 60)}:{(Math.floor(position % 60)).toString().padStart(2, '0')}
+                                {(() => {
+                                    const totalSeconds = Math.floor(position / 1000);
+                                    const minutes = Math.floor(totalSeconds / 60);
+                                    const seconds = Math.floor(totalSeconds % 60);
+                                    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                                })()}
                             </Text>
                             <Text style={[styles.timeText, { color: theme.secondaryText }]}>
-                                {Math.floor(duration / 60)}:{(Math.floor(duration % 60)).toString().padStart(2, '0')}
+                                {(() => {
+                                    const totalSeconds = Math.floor(duration / 1000);
+                                    const minutes = Math.floor(totalSeconds / 60);
+                                    const seconds = Math.floor(totalSeconds % 60);
+                                    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                                })()}
                             </Text>
                         </View>
 
                         <View style={styles.mainControls}>
-                            <TouchableOpacity onPress={previousTrack} style={styles.skipBtn}>
-                                <Ionicons name="play-skip-back" size={24} color={theme.text} />
+                            <TouchableOpacity onPress={previousTrack} style={styles.iconBtn}>
+                                <Ionicons name="play-skip-back" size={20} color={theme.text} />
                             </TouchableOpacity>
 
-                            <TouchableOpacity onPress={() => skip(-10)} style={styles.skipBtn}>
-                                <Ionicons name="play-back" size={20} color={theme.secondaryText} />
+                            {/* Circular Skip -10 */}
+                            <TouchableOpacity onPress={() => skip(-10)} style={[styles.skipCircleBtn, { borderColor: theme.secondaryText }]}>
+                                <Text style={[styles.skipText, { color: theme.secondaryText }]}>-10</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity onPress={handlePlayPause} style={[styles.playBtn, { backgroundColor: theme.primary }]}>
@@ -110,11 +121,12 @@ export const MiniPlayer: React.FC = () => {
                                 )}
                             </TouchableOpacity>
 
-                            <TouchableOpacity onPress={() => skip(10)} style={styles.skipBtn}>
-                                <Ionicons name="play-forward" size={20} color={theme.secondaryText} />
+                            {/* Circular Skip +10 */}
+                            <TouchableOpacity onPress={() => skip(10)} style={[styles.skipCircleBtn, { borderColor: theme.secondaryText }]}>
+                                <Text style={[styles.skipText, { color: theme.secondaryText }]}>+10</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity onPress={nextTrack} style={styles.skipBtn}>
+                            <TouchableOpacity onPress={nextTrack} style={styles.iconBtn}>
                                 <Ionicons name="play-skip-forward" size={24} color={theme.text} />
                             </TouchableOpacity>
                         </View>
@@ -191,22 +203,29 @@ export const MiniPlayer: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        paddingBottom: Platform.OS === 'ios' ? 24 : 12,
-        borderTopWidth: 1,
-        borderTopLeftRadius: Radius.xxl,
-        borderTopRightRadius: Radius.xxl,
+        bottom: Platform.OS === 'ios' ? 20 : 10,
+        left: Spacing.sm,
+        right: Spacing.sm,
+        paddingBottom: Spacing.sm,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)', // Glass-like feel (dynamic in dark mode in real app, here checking theme)
+        borderRadius: Radius.xl,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.05)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 20,
+        elevation: 10,
     },
     content: {
-        padding: Spacing.md,
+        paddingHorizontal: Spacing.md,
+        paddingTop: Spacing.sm,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: Spacing.xs,
+        marginBottom: 2,
     },
     infoContainer: {
         flexDirection: 'row',
@@ -215,75 +234,87 @@ const styles = StyleSheet.create({
         marginRight: Spacing.md,
     },
     titleIcon: {
-        marginRight: Spacing.sm,
+        marginRight: Spacing.xs,
+        opacity: 0.8,
     },
     title: {
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: '700',
         letterSpacing: -0.2,
     },
     headerButtons: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: Spacing.sm,
+        gap: Spacing.xs,
     },
     iconBtn: {
-        width: 36,
-        height: 36,
+        width: 32,
+        height: 32,
         alignItems: 'center',
         justifyContent: 'center',
     },
     speedBtn: {
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: Radius.sm,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: Radius.full,
         borderWidth: 1,
+        marginRight: 4,
     },
     speedText: {
-        fontSize: 12,
-        fontWeight: '700',
+        fontSize: 10,
+        fontWeight: '800',
     },
     controlsRow: {
-        marginTop: -Spacing.xs,
+        marginTop: 0,
     },
     timeRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: Spacing.sm,
+        marginBottom: Spacing.xs,
+        paddingHorizontal: Spacing.xs,
     },
     timeText: {
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: '600',
         fontVariant: ['tabular-nums'],
+        opacity: 0.6,
     },
     mainControls: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: Spacing.md,
+        justifyContent: 'space-between', // Distribute evenly
+        paddingHorizontal: Spacing.lg,
+        paddingBottom: 4,
     },
     playBtn: {
-        width: 56,
-        height: 56,
-        borderRadius: Radius.full,
+        width: 58,
+        height: 58,
+        borderRadius: 29,
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.25,
         shadowRadius: 8,
-        elevation: 6,
+        elevation: 8,
     },
     slider: {
         width: '100%',
-        height: 30,
-        marginVertical: Spacing.xs,
+        height: 24, // Lower height to be less obtrusive
+        marginVertical: 4,
     },
-    skipBtn: {
+    skipCircleBtn: {
         width: 44,
         height: 44,
-        alignItems: 'center',
+        borderRadius: 22,
+        borderWidth: 1.5,
         justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.02)',
+    },
+    skipText: {
+        fontSize: 11,
+        fontWeight: '800',
     },
     modalOverlay: {
         flex: 1,
