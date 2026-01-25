@@ -52,6 +52,8 @@ export const MiniPlayer: React.FC = () => {
     };
 
     const formatTime = (ms: number) => {
+        if (!ms && ms !== 0) return '--:--';
+        if (ms === 0 && duration === 0) return '0:00'; // Initial state
         const totalSeconds = Math.floor(ms / 1000);
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = Math.floor(totalSeconds % 60);
@@ -65,49 +67,105 @@ export const MiniPlayer: React.FC = () => {
 
     // Mini Player Component
     const MiniBar = () => (
-        <TouchableOpacity
+        <View
             style={[
                 styles.miniContainer,
-                { backgroundColor: theme.surface, borderTopColor: theme.border },
-                Shadows.lg
+                {
+                    backgroundColor: theme.background,
+                    borderTopColor: theme.primary,
+                    borderColor: theme.primary,
+                },
+                Shadows.lg,
+                // High z-index to ensure it sits above everything (Tabs, etc.)
+                { zIndex: 9999, elevation: 20 }
             ]}
-            onPress={() => setIsExpanded(true)}
-            activeOpacity={0.9}
         >
             {/* Progress Bar Line */}
-            <View style={[styles.miniProgressBar, { backgroundColor: theme.border }]}>
+            <View style={[styles.miniProgressBar, { backgroundColor: theme.surface }]}>
                 <View style={[styles.miniProgressFill, { width: `${getProgressPercent()}%`, backgroundColor: theme.primary }]} />
             </View>
 
             <View style={styles.miniContent}>
-                <View style={[styles.miniIconBg, { backgroundColor: theme.primary + '15' }]}>
-                    <Ionicons name="musical-notes" size={20} color={theme.primary} />
-                </View>
-
-                <View style={styles.miniTextContainer}>
-                    <Text style={[styles.miniTitle, { color: theme.text }]} numberOfLines={1}>
-                        {trackName}
-                    </Text>
-                    <Text style={[styles.miniSubtitle, { color: theme.secondaryText }]} numberOfLines={1}>
-                        {isPlaying ? 'Playing' : 'Paused'} • {formatTime(position)} / {formatTime(duration)}
-                    </Text>
-                </View>
-
+                {/* Top Row: Info - Clickable to Expand */}
                 <TouchableOpacity
-                    onPress={(e) => {
-                        e.stopPropagation();
-                        handlePlayPause();
-                    }}
-                    style={[styles.miniPlayBtn, { backgroundColor: theme.primary }]}
+                    style={styles.miniHeaderRow}
+                    onPress={() => setIsExpanded(true)}
+                    activeOpacity={0.7}
                 >
-                    {isLoading ? (
-                        <ActivityIndicator color="#fff" size="small" />
-                    ) : (
-                        <Ionicons name={isPlaying ? "pause" : "play"} size={22} color="#fff" style={!isPlaying ? { marginLeft: 2 } : null} />
-                    )}
+                    <View style={[styles.miniIconBg, { backgroundColor: theme.primary + '20' }]}>
+                        <Ionicons name="musical-notes" size={18} color={theme.primary} />
+                    </View>
+                    <View style={styles.miniTextContainer}>
+                        <Text style={[styles.miniTitle, { color: theme.text }]} numberOfLines={1}>
+                            {trackName}
+                        </Text>
+                        <Text style={[styles.miniSubtitle, { color: theme.secondaryText }]} numberOfLines={1}>
+                            {formatTime(position)} / {formatTime(duration)}
+                        </Text>
+                    </View>
                 </TouchableOpacity>
+
+                {/* Bottom Row: Controls - Independent Buttons */}
+                <View style={styles.miniControlsRow} pointerEvents="box-none">
+                    {/* Skip -10s */}
+                    <TouchableOpacity
+                        onPress={() => skip(-10)}
+                        style={styles.miniControlBtn}
+                    >
+                        <Ionicons name="reload-outline" size={24} color={theme.text} style={{ transform: [{ scaleX: -1 }] }} />
+                        <Text style={[styles.miniControlText, { color: theme.text }]}>-10</Text>
+                    </TouchableOpacity>
+
+                    {/* Previous */}
+                    <TouchableOpacity
+                        onPress={previousTrack}
+                        style={styles.miniControlBtn}
+                    >
+                        <Ionicons name="play-skip-back" size={26} color={theme.text} />
+                    </TouchableOpacity>
+
+                    {/* Stop */}
+                    <TouchableOpacity
+                        onPress={() => {
+                            pauseSound(false); // Do not save position
+                            seekScroll(0);
+                        }}
+                        style={styles.miniControlBtn}
+                    >
+                        <Ionicons name="stop" size={26} color={theme.error} />
+                    </TouchableOpacity>
+
+                    {/* Play/Pause */}
+                    <TouchableOpacity
+                        onPress={handlePlayPause}
+                        style={[styles.miniPlayBtn, { backgroundColor: theme.primary, elevation: 5, zIndex: 100 }]}
+                    >
+                        {isLoading ? (
+                            <ActivityIndicator color="#fff" size="small" />
+                        ) : (
+                            <Ionicons name={isPlaying ? "pause" : "play"} size={24} color="#fff" style={!isPlaying ? { marginLeft: 3 } : null} />
+                        )}
+                    </TouchableOpacity>
+
+                    {/* Next */}
+                    <TouchableOpacity
+                        onPress={nextTrack}
+                        style={styles.miniControlBtn}
+                    >
+                        <Ionicons name="play-skip-forward" size={26} color={theme.text} />
+                    </TouchableOpacity>
+
+                    {/* Skip +10s */}
+                    <TouchableOpacity
+                        onPress={() => skip(10)}
+                        style={styles.miniControlBtn}
+                    >
+                        <Ionicons name="reload-outline" size={24} color={theme.text} />
+                        <Text style={[styles.miniControlText, { color: theme.text }]}>+10</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-        </TouchableOpacity>
+        </View>
     );
 
     // Full Player Component
@@ -277,20 +335,21 @@ const styles = StyleSheet.create({
         bottom: Platform.OS === 'ios' ? 24 : 16,
         left: Spacing.md,
         right: Spacing.md,
-        height: 64,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: 'rgba(0,0,0,0.05)',
-        justifyContent: 'center',
+        height: 110, // Increased height for two rows
+        borderRadius: 20,
+        borderWidth: 2, // Thicker border
+        justifyContent: 'space-between',
+        paddingVertical: 12,
         elevation: 8,
     },
     miniProgressBar: {
         position: 'absolute',
         top: 0,
-        left: 16,
-        right: 16,
+        left: 20,
+        right: 20,
         height: 3,
-        borderRadius: 2,
+        borderBottomLeftRadius: 4,
+        borderBottomRightRadius: 4,
         overflow: 'hidden',
     },
     miniProgressFill: {
@@ -298,13 +357,18 @@ const styles = StyleSheet.create({
         borderRadius: 2,
     },
     miniContent: {
+        flex: 1,
+        justifyContent: 'space-between',
+    },
+    miniHeaderRow: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: Spacing.md,
+        marginBottom: 8,
     },
     miniIconBg: {
-        width: 40,
-        height: 40,
+        width: 32,
+        height: 32,
         borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
@@ -315,21 +379,41 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     miniTitle: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '700',
         marginBottom: 2,
     },
     miniSubtitle: {
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: '500',
     },
-    miniPlayBtn: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+    miniControlsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-evenly', // Distribute controls evenly
+        paddingHorizontal: Spacing.xs,
+    },
+    miniControlBtn: {
+        padding: 10, // Increased padding for touch target
         alignItems: 'center',
         justifyContent: 'center',
-        marginLeft: Spacing.sm,
+    },
+    miniControlText: {
+        fontSize: 9,
+        fontWeight: '700',
+        marginTop: 2,
+    },
+    miniPlayBtn: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
     },
 
     // Full Player Styles

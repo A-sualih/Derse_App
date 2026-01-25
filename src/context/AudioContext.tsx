@@ -208,19 +208,68 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const status = await sound.getStatusAsync();
             if (status.isLoaded) {
                 const currentPos = status.positionMillis;
-                const totalDur = status.durationMillis || 0; // Use 0 if unknown
+                const totalDur = status.durationMillis || 0;
                 const newPos = currentPos + (seconds * 1000);
 
-                // If duration is known (>0), clamp. Else just go to newPos (but at least 0).
-                const clamped = Math.max(0, totalDur > 0 ? Math.min(newPos, totalDur) : newPos);
+                // SIMPLIFIED LOGIC: Just try to seek. 
+                // If duration is known, we clamp. If 0, we assume it's valid to seek forward.
+                // We clamp start to 0.
+                let targetPos = Math.max(0, newPos);
+                if (totalDur > 0) {
+                    targetPos = Math.min(targetPos, totalDur);
+                }
 
-                console.log('[AudioContext] Skipping:', { currentPos, totalDur, newPos, clamped, seconds });
-                await sound.setPositionAsync(clamped);
+                console.log('[AudioContext] Seek Request:', {
+                    currentPos,
+                    totalDur,
+                    seconds,
+                    newPos,
+                    targetPos
+                });
+
+                try {
+                    await sound.setPositionAsync(targetPos);
+                    // Force update position immediately to UI
+                    setPosition(targetPos);
+                } catch (e) {
+                    console.error('[AudioContext] Seek Failed:', e);
+                }
             }
         }
     };
 
     const nextTrack = async () => {
+        console.log('[AudioContext] nextTrack called. Queue Length:', currentQueue.length, 'Current ID:', currentFileId);
+
+        const audioFiles = currentQueue.filter(file => file.type === 'audio');
+        if (audioFiles.length === 0) {
+            console.warn('[AudioContext] No audio files in queue');
+            return;
+        }
+
+        let currentIndex = -1;
+        if (currentFileId) {
+            currentIndex = audioFiles.findIndex(file => file.id === currentFileId);
+        }
+        if (currentIndex === -1) {
+            // Fallback: try mostly anything to find the current track
+            currentIndex = audioFiles.findIndex(file => file.url === currentUri || getLocalUri(`${file.id}.${file.extension || 'mp3'}`) === currentUri);
+        }
+
+        console.log('[AudioContext] Current Index:', currentIndex);
+
+        let nextIndex = 0;
+        if (currentIndex !== -1) {
+            nextIndex = (currentIndex + 1) % audioFiles.length;
+        }
+
+        const nextFile = audioFiles[nextIndex];
+        console.log('[AudioContext] Playing Next:', nextFile.name, nextFile.id);
+        playTrackFromFile(nextFile);
+    };
+
+    const previousTrack = async () => {
+        console.log('[AudioContext] previousTrack called');
         const audioFiles = currentQueue.filter(file => file.type === 'audio');
         if (audioFiles.length === 0) return;
 
@@ -229,53 +278,29 @@ export const AudioProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             currentIndex = audioFiles.findIndex(file => file.id === currentFileId);
         }
         if (currentIndex === -1) {
-            currentIndex = audioFiles.findIndex(file => file.url === currentUri || getLocalUri(file.name) === currentUri);
+            currentIndex = audioFiles.findIndex(file => file.url === currentUri || getLocalUri(`${file.id}.${file.extension || 'mp3'}`) === currentUri);
         }
-
-        const nextIndex = (currentIndex + 1) % audioFiles.length;
-        const nextFile = audioFiles[nextIndex];
-
-        // Handle local vs remote URI
-        const isDownloaded = await checkFileExists(nextFile.name); // Note: checkFileExists still uses name? We should update this later if we use ID logic. 
-        // But for now, we follow existing logic. 
-        // Wait, checkFileExists helper might need update if we changed filenames in FileListItem only.
-        // Actually, downloader uses ID based filenames now. checkFileExists takes a filename.
-        // We need to construct the filename same way as FileListItem.
-        // Let's rely on FileListItem passing correct URI or just check logic.
-        // Re-using same logic as before:
-
-        // Helper to guess filename if we don't have it handy?
-        // Ideally nextTrack should just use the ID derived filename.
-        // Let's simplify: try to just play the URL, if useFileDownloader in FileListItem handled it, maybe good. 
-        // But here we need to know if local exists to play local.
-
-        // For consistent ID filenames:
-        const ext = nextFile.extension || 'mp3';
-        const safeFilename = `${nextFile.id}.${ext}`;
-        const isLocal = await checkFileExists(safeFilename);
-        const nextUri = isLocal ? getLocalUri(safeFilename) || nextFile.url : nextFile.url;
-
-        playSound(nextUri, nextFile.name, currentQueue, nextFile.id);
-    };
-
-    const previousTrack = async () => {
-        const audioFiles = currentQueue.filter(file => file.type === 'audio');
-        if (audioFiles.length === 0) return;
-
-        let currentIndex = audioFiles.findIndex(file => file.id === currentFileId);
-        if (currentIndex === -1) currentIndex = 0;
 
         let prevIndex = currentIndex - 1;
         if (prevIndex < 0) prevIndex = audioFiles.length - 1;
 
+        // If we lost track of index, default to previous of 0 (which is last)
+        if (currentIndex === -1) prevIndex = audioFiles.length - 1;
+
         const prevFile = audioFiles[prevIndex];
+        console.log('[AudioContext] Playing Prev:', prevFile.name, prevFile.id);
+        playTrackFromFile(prevFile);
+    };
 
-        const ext = prevFile.extension || 'mp3';
-        const safeFilename = `${prevFile.id}.${ext}`;
+    // Helper to centralize "Play this file object" logic (checking local vs remote)
+    const playTrackFromFile = async (file: DriveFile) => {
+        const ext = file.extension || 'mp3';
+        const safeFilename = `${file.id}.${ext}`;
         const isLocal = await checkFileExists(safeFilename);
-        const prevUri = isLocal ? getLocalUri(safeFilename) || prevFile.url : prevFile.url;
+        const uri = isLocal ? getLocalUri(safeFilename) || file.url : file.url;
 
-        playSound(prevUri, prevFile.name, currentQueue, prevFile.id);
+        console.log('[AudioContext] Resolved URI for', file.name, ':', uri, 'Local?', isLocal);
+        playSound(uri, file.name, currentQueue, file.id);
     };
 
     return (

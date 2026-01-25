@@ -79,7 +79,8 @@ export default function DerseDetailScreen() {
                     return (
                         <FileListItem
                             file={item}
-                            onPlay={(uri, title) => playSound(uri, title, category.files, item.id)}
+                            queue={category.files}
+                            onPlay={playSound}
                             onPause={pauseSound}
                             onSeek={seekScroll}
                             isPlaying={isPlaying}

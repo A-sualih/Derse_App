@@ -20,6 +20,7 @@ interface FileListItemProps {
     duration?: number;
     playbackSpeed?: number;
     onSetSpeed?: (speed: number) => void;
+    queue?: DriveFile[]; // Added queue prop
 }
 
 export const FileListItem: React.FC<FileListItemProps> = ({
@@ -33,7 +34,8 @@ export const FileListItem: React.FC<FileListItemProps> = ({
     position = 0,
     duration = 0,
     playbackSpeed = 1.0,
-    onSetSpeed
+    onSetSpeed,
+    queue, // Destructure queue
 }) => {
     const colorScheme = useColorScheme() ?? 'light';
     const theme = Colors[colorScheme];
@@ -70,7 +72,7 @@ export const FileListItem: React.FC<FileListItemProps> = ({
         if (isCurrent && isPlaying && onPause) {
             onPause();
         } else if (onPlay) {
-            onPlay(localUri, file.name, undefined, file.id);
+            onPlay(localUri, file.name, queue, file.id); // Pass queue
         }
     };
 
